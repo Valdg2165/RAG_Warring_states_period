@@ -540,6 +540,14 @@ Lü Buwei,co_occurs_with,Qin,https://en.wikipedia.org/wiki/Warring_States_period
 Lü Buwei,co_occurs_with,Qin Shihuang.[citation,https://en.wikipedia.org/wiki/Warring_States_period
 Qin,co_occurs_with,Qin Shihuang.[citation,https://en.wikipedia.org/wiki/Warring_States_period
 The era largely corresponds to the second half of the Eastern Zhou period,heldPosition,when the king,https://en.wikipedia.org/wiki/Warring_States_period
+Chu but,defeated,Chu's counter-attack,https://en.wikipedia.org/wiki/Warring_States_period
+Qin,conquered,Han,https://en.wikipedia.org/wiki/Warring_States_period
+Qin,conquered,Wei,https://en.wikipedia.org/wiki/Warring_States_period
+Qin,conquered,Chu,https://en.wikipedia.org/wiki/Warring_States_period
+Qin,conquered,Zhao and Yan,https://en.wikipedia.org/wiki/Warring_States_period
+Wey appealed to Wei which,attacked,Zhao on the western side,https://en.wikipedia.org/wiki/Warring_States_period
+Han from the south,attacked,Wei,https://en.wikipedia.org/wiki/Warring_States_period
+Wei,attacked,Han,https://en.wikipedia.org/wiki/Warring_States_period
 Chinese,co_occurs_with,Qin,https://en.wikipedia.org/wiki/Seven_Warring_States
 Chinese,co_occurs_with,Zhao,https://en.wikipedia.org/wiki/Seven_Warring_States
 Chinese,co_occurs_with,Wei,https://en.wikipedia.org/wiki/Seven_Warring_States
@@ -641,6 +649,7 @@ Qin,attack,Han,https://en.wikipedia.org/wiki/State_of_Qin
 Qin,attack,Yan,https://en.wikipedia.org/wiki/State_of_Qin
 Ying Zheng,put,Li Xin,https://en.wikipedia.org/wiki/State_of_Qin
 Ying Zheng,put,Wang Jian,https://en.wikipedia.org/wiki/State_of_Qin
+Ying Zheng,declare,Qin Shi Huang,https://en.wikipedia.org/wiki/State_of_Qin
 Qin,unify,China,https://en.wikipedia.org/wiki/State_of_Qin
 Qin,co_occurs_with,Chinese,https://en.wikipedia.org/wiki/State_of_Qin
 Qin,co_occurs_with,Xirong,https://en.wikipedia.org/wiki/State_of_Qin
@@ -1207,6 +1216,15 @@ Confucians,co_occurs_with,Confucian,https://en.wikipedia.org/wiki/State_of_Qin
 Confucians,co_occurs_with,Xun Kuang,https://en.wikipedia.org/wiki/State_of_Qin
 Confucians,co_occurs_with,Qin,https://en.wikipedia.org/wiki/State_of_Qin
 Qin,co_occurs_with,Han Zhaoqi:[45,https://en.wikipedia.org/wiki/State_of_Qin
+Qin and Chu armies jointly,defeated,Wu in several battles,https://en.wikipedia.org/wiki/State_of_Qin
+Qin,defeated,Wei and Han,https://en.wikipedia.org/wiki/State_of_Qin
+Three times Qin,defeated,Vertical Alliances,https://en.wikipedia.org/wiki/State_of_Qin
+Qin repeatedly,defeated,Vertical Alliances and conquered their ci,https://en.wikipedia.org/wiki/State_of_Qin
+Chu formed such an alliance and,attacked,Qin,https://en.wikipedia.org/wiki/State_of_Qin
+Qin,attacked,Han,https://en.wikipedia.org/wiki/State_of_Qin
+Qin,attacked,Yan again in,https://en.wikipedia.org/wiki/State_of_Qin
+This unification,founded,Qin dynasty,https://en.wikipedia.org/wiki/State_of_Qin
+Ji Fa that,founded,Zhou dynasty,https://en.wikipedia.org/wiki/State_of_Qin
 Zhou,overthrow,the Shang dynasty,https://en.wikipedia.org/wiki/State_of_Chu
 Cheng,enfeoff,Xiong Yi,https://en.wikipedia.org/wiki/State_of_Chu
 Chu,force,Zheng,https://en.wikipedia.org/wiki/State_of_Chu
@@ -2671,6 +2689,11 @@ Xiang Yu,co_occurs_with,Julu,https://en.wikipedia.org/wiki/State_of_Chu
 Qin,co_occurs_with,Julu,https://en.wikipedia.org/wiki/State_of_Chu
 Julu,co_occurs_with,Liu Bang,https://en.wikipedia.org/wiki/State_of_Chu
 Liu Bang,co_occurs_with,Liu Bang,https://en.wikipedia.org/wiki/State_of_Chu
+Jin,defeated,Chu in the battle of Bi,https://en.wikipedia.org/wiki/State_of_Chu
+Qin invaded and,conquered,Shu and nearby Ba,https://en.wikipedia.org/wiki/State_of_Chu
+Qin general Bai Qi finally,conquered,Chu's capital at Ying,https://en.wikipedia.org/wiki/State_of_Chu
+Wu defeated Qi and then,attacked,Chu in,https://en.wikipedia.org/wiki/State_of_Chu
+He made Wu Qi chancellor and,reformed,Chu government and army,https://en.wikipedia.org/wiki/State_of_Chu
 Bi Wan,serve,Jin,https://en.wikipedia.org/wiki/State_of_Wei
 Wei,co_occurs_with,Chinese,https://en.wikipedia.org/wiki/State_of_Wei
 Wei,co_occurs_with,China,https://en.wikipedia.org/wiki/State_of_Wei
@@ -3445,6 +3468,10 @@ Zhao,co_occurs_with,Qin Er Shi,https://en.wikipedia.org/wiki/State_of_Zhao
 Zhao,co_occurs_with,English,https://en.wikipedia.org/wiki/State_of_Zhao
 English,co_occurs_with,English,https://en.wikipedia.org/wiki/State_of_Zhao
 English,co_occurs_with,Chinese,https://en.wikipedia.org/wiki/State_of_Zhao
+Qin captured King Youmiao and,defeated,Zhao in,https://en.wikipedia.org/wiki/State_of_Zhao
+Chen Yu,defeated,Han Xin in,https://en.wikipedia.org/wiki/State_of_Zhao
+BC when Wei,attacked,Zhao,https://en.wikipedia.org/wiki/State_of_Zhao
+Zhao Xie,founded,Chen Yu as King of Dai,https://en.wikipedia.org/wiki/State_of_Zhao
 Wu,depose,Di Xin,https://en.wikipedia.org/wiki/State_of_Yan
 Wu Chen,send,Han Guang,https://en.wikipedia.org/wiki/State_of_Yan
 Han Guang,send,Zang Tu,https://en.wikipedia.org/wiki/State_of_Yan
@@ -3888,6 +3915,7 @@ Wucheng,co_occurs_with,Wucheng - Xi,https://en.wikipedia.org/wiki/State_of_Yan
 Yan,co_occurs_with,Nu Ophiuchi,https://en.wikipedia.org/wiki/State_of_Yan
 Wu,co_occurs_with,Wei,https://en.wikipedia.org/wiki/State_of_Yan
 Yi,attack,Qi,https://en.wikipedia.org/wiki/State_of_Qi
+Hui,pronounce,Bà,https://en.wikipedia.org/wiki/State_of_Qi
 Jin,defeat,Chu,https://en.wikipedia.org/wiki/State_of_Qi
 Qin,unify,China,https://en.wikipedia.org/wiki/State_of_Qi
 Qi,co_occurs_with,Wade,https://en.wikipedia.org/wiki/State_of_Qi
@@ -4915,6 +4943,7 @@ Confucius,co_occurs_with,Zhou,https://en.wikipedia.org/wiki/Confucius
 Xia,co_occurs_with,Zhou,https://en.wikipedia.org/wiki/Confucius
 Confucius,co_occurs_with,the State of Lu,https://en.wikipedia.org/wiki/Confucius
 Kong Qiu,heldPosition,was a chinese philosopher of the spring and autumn period who is traditionally considered the paragon,https://en.wikipedia.org/wiki/Confucius
+Kung Te-cheng,diedIn,October,https://en.wikipedia.org/wiki/Confucius
 edit]Mencius,bear,Meng Ke,https://en.wikipedia.org/wiki/Mencius
 Hui,appoint,Mencius,https://en.wikipedia.org/wiki/Mencius
 Mencius,co_occurs_with,Meng Ke,https://en.wikipedia.org/wiki/Mencius
@@ -5070,6 +5099,7 @@ China Zoucheng Heritage Tourism Bureau,co_occurs_with,Xuzhou Mengshi Clan Friend
 First Mencius Institute,co_occurs_with,China,https://en.wikipedia.org/wiki/Mencius
 First Mencius Institute,co_occurs_with,Malaysia,https://en.wikipedia.org/wiki/Mencius
 China,co_occurs_with,Malaysia,https://en.wikipedia.org/wiki/Mencius
+First Mencius Institute outside of China,locatedIn,Universiti Tunku Abdul Rahman,https://en.wikipedia.org/wiki/Mencius
 Sima Tan,praise,Fajia,https://en.wikipedia.org/wiki/Legalism_(Chinese_philosophy)
 Tan,criticize,Fajia,https://en.wikipedia.org/wiki/Legalism_(Chinese_philosophy)
 Gongsun Yang,govern,Qin,https://en.wikipedia.org/wiki/Legalism_(Chinese_philosophy)
@@ -6503,6 +6533,7 @@ Omi,co_occurs_with,CCTV,https://en.wikipedia.org/wiki/Qin_Shi_Huang
 Omi,co_occurs_with,Fu Dalong,https://en.wikipedia.org/wiki/Qin_Shi_Huang
 CCTV,co_occurs_with,CCTV,https://en.wikipedia.org/wiki/Qin_Shi_Huang
 CCTV,co_occurs_with,Fu Dalong,https://en.wikipedia.org/wiki/Qin_Shi_Huang
+Qin armies,attacked,Zhao,https://en.wikipedia.org/wiki/Qin_Shi_Huang
 Qin,capture,Wangcheng,https://en.wikipedia.org/wiki/Zhou_dynasty
 Chinese,co_occurs_with,China,https://en.wikipedia.org/wiki/Zhou_dynasty
 Chinese,co_occurs_with,Chinese,https://en.wikipedia.org/wiki/Zhou_dynasty
@@ -6862,6 +6893,7 @@ Ji,co_occurs_with,Yan,https://en.wikipedia.org/wiki/Zhou_dynasty
 Ji,co_occurs_with,Wei,https://en.wikipedia.org/wiki/Zhou_dynasty
 Yan,co_occurs_with,Wei,https://en.wikipedia.org/wiki/Zhou_dynasty
 Confucius,co_occurs_with,Zhou,https://en.wikipedia.org/wiki/Zhou_dynasty
+The remaining Ji family,ruled,Yan and Wei until,https://en.wikipedia.org/wiki/Zhou_dynasty
 Huan,reform,Qi,https://en.wikipedia.org/wiki/Spring_and_Autumn_period
 Fuchai,defeat,Qi,https://en.wikipedia.org/wiki/Spring_and_Autumn_period
 Chinese,co_occurs_with,Zhou,https://en.wikipedia.org/wiki/Spring_and_Autumn_period
@@ -7984,6 +8016,7 @@ Qing Ji - Zhuan Zhu,co_occurs_with,Liji,https://en.wikipedia.org/wiki/Spring_and
 Liao - Bo Ya,co_occurs_with,Ou Yezi,https://en.wikipedia.org/wiki/Spring_and_Autumn_period
 Liao - Bo Ya,co_occurs_with,Liji,https://en.wikipedia.org/wiki/Spring_and_Autumn_period
 Ou Yezi,co_occurs_with,Liji,https://en.wikipedia.org/wiki/Spring_and_Autumn_period
+Duke Huan,reformed,Qi to centralize its power structure,https://en.wikipedia.org/wiki/Spring_and_Autumn_period
 Qin,attack,the State of Han,https://en.wikipedia.org/wiki/Battle_of_Changping
 Qin,replace,Wang He,https://en.wikipedia.org/wiki/Battle_of_Changping
 three years,exhaust,Qin,https://en.wikipedia.org/wiki/Battle_of_Changping

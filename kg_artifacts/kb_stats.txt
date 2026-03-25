@@ -1,4 +1,4 @@
-Total RDF triples : 15068
+Total RDF triples : 15069
 Unique entities   : 2109
 
 Instance type breakdown:
@@ -15,16 +15,16 @@ Instance type breakdown:
 Top predicates (excluding rdf:type/rdfs:label/prov):
   coOccursWith              8165
   attacked                  8
-  defeated                  7
   conquered                 7
   sent                      7
+  defeated                  7
   referenced                4
   criticized                3
   invaded                   3
-  mentioned                 2
+  declared                  2
   captured                  2
-  blamed                    2
-  ruled                     2
-  enfeoffed                 2
   overthrew                 2
+  blamed                    2
   replaced                  2
+  ruled                     2
+  reformed                  2

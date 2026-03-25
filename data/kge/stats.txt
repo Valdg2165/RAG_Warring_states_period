@@ -1,29 +1,29 @@
 === KGE Dataset Statistics ===
-Total triples        : 21,034
-  Train              : 17,038
-  Valid              : 1,996
-  Test               : 2,000
-Unique entities      : 2,706
+Total triples        : 21,053
+  Train              : 17,054
+  Valid              : 1,995
+  Test               : 2,004
+Unique entities      : 2,720
 Unique relations     : 83
 
 Top-20 relations by frequency:
   coOccursWith                              15,547
-  wasDerivedFrom                             4,639
-  hasParticipant                               164
-  locatedIn                                    162
+  wasDerivedFrom                             4,644
+  hasParticipant                               171
+  locatedIn                                    168
   authored                                     100
   authoredBy                                   100
-  positionHeldBy                                41
   heldPosition                                  41
+  positionHeldBy                                41
   inverseOf                                     35
   birthplaceOf                                  14
   bornIn                                        14
   atWarWith                                     14
-  wasAttackedBy                                  8
   attacked                                       8
-  defeated                                       7
-  wasSentBy                                      7
-  conquered                                      7
-  sent                                           7
-  wasConqueredBy                                 7
+  wasAttackedBy                                  8
   wasDefeatedBy                                  7
+  conquered                                      7
+  wasConqueredBy                                 7
+  sent                                           7
+  wasSentBy                                      7
+  defeated                                       7

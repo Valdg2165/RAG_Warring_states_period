@@ -116,11 +116,7 @@ footer { display: none !important; }
 """
 
 def build_ui() -> gr.Blocks:
-    with gr.Blocks(
-        title="Warring States KG — RAG Demo",
-        theme=gr.themes.Soft(),
-        css=CSS,
-    ) as demo:
+    with gr.Blocks(title="Warring States KG — RAG Demo") as demo:
 
         # ── Header ────────────────────────────────────────────────────────────
         gr.Markdown(
@@ -225,7 +221,8 @@ def main():
     _ensure_loaded()
 
     demo = build_ui()
-    demo.launch(server_port=args.port, share=args.share)
+    demo.launch(server_port=args.port, share=args.share,
+                theme=gr.themes.Soft(), css=CSS)
 
 
 if __name__ == "__main__":

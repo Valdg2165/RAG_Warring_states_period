@@ -43,8 +43,8 @@ NOISE_PATTERNS = [
 ]
 
 # Dependency relations that signal a predicate between subject and object
-SUBJ_DEPS  = {"nsubj", "nsubjpass"}
-OBJ_DEPS   = {"dobj", "pobj", "attr", "nmod"}
+SUBJ_DEPS  = {"nsubj", "nsubjpass", "agent"}
+OBJ_DEPS   = {"dobj", "pobj", "attr", "nmod", "xcomp", "ccomp"}
 
 # Role/occupation keywords to capture as heldPosition triples
 ROLE_KEYWORDS = {
@@ -193,6 +193,90 @@ def extract_roles(text: str, source_url: str) -> list[dict]:
     return triples
 
 
+# ── Pattern-based relation extraction ────────────────────────────────────────
+# Each entry: (predicate_name, compiled_regex, group_subject, group_object)
+# Captures common Wikipedia sentence structures for rich triple generation.
+
+_NAME   = r"([A-Z][a-zA-Z\s\-']{2,40}?)"
+_TARGET = r"([A-Z][a-zA-Z\s\-']{2,40})"
+_PLACE  = r"([A-Z][a-zA-Z\s\-']{2,30})"
+
+PATTERN_RULES = [
+    # bornIn
+    ("bornIn",       re.compile(_NAME + r"\s+was born (?:in|at|near)\s+" + _PLACE, re.U)),
+    ("bornIn",       re.compile(_NAME + r",?\s+born (?:in|at)\s+" + _PLACE, re.U)),
+    # diedIn
+    ("diedIn",       re.compile(_NAME + r"\s+died (?:in|at|near)\s+" + _PLACE, re.U)),
+    # studentOf
+    ("studentOf",    re.compile(_NAME + r"\s+studied under\s+" + _TARGET, re.U)),
+    ("studentOf",    re.compile(_NAME + r"\s+was a student of\s+" + _TARGET, re.U)),
+    ("studentOf",    re.compile(_NAME + r"\s+was taught by\s+" + _TARGET, re.U)),
+    ("studentOf",    re.compile(_NAME + r"\s+became a disciple of\s+" + _TARGET, re.U)),
+    # influencedBy
+    ("influencedBy", re.compile(_NAME + r"\s+was (?:greatly )?influenced by\s+" + _TARGET, re.U)),
+    ("influencedBy", re.compile(_NAME + r"'s thought was influenced by\s+" + _TARGET, re.U)),
+    # authored
+    ("authored",     re.compile(_NAME + r"\s+(?:wrote|authored|composed|compiled)\s+(?:the\s+)?" + _TARGET, re.U)),
+    ("authored",     re.compile(_NAME + r"\s+is (?:the )?(?:author|writer) of\s+(?:the\s+)?" + _TARGET, re.U)),
+    # servedIn
+    ("servedIn",     re.compile(_NAME + r"\s+served (?:in|under|as .{1,30} in)\s+" + _TARGET, re.U)),
+    ("servedIn",     re.compile(_NAME + r"\s+was (?:a |an )?.{0,30}in the service of\s+" + _TARGET, re.U)),
+    # ruled
+    ("ruled",        re.compile(_NAME + r"\s+ruled\s+(?:over\s+)?" + _TARGET, re.U)),
+    ("ruled",        re.compile(_NAME + r"\s+was (?:king|ruler|duke|emperor) of\s+" + _TARGET, re.U)),
+    # defeated
+    ("defeated",     re.compile(_NAME + r"\s+defeated\s+" + _TARGET, re.U)),
+    ("defeated",     re.compile(_NAME + r"\s+was defeated by\s+" + _TARGET, re.U)),
+    # conquered
+    ("conquered",    re.compile(_NAME + r"\s+conquered\s+" + _TARGET, re.U)),
+    # attacked
+    ("attacked",     re.compile(_NAME + r"\s+(?:attacked|invaded|laid siege to)\s+" + _TARGET, re.U)),
+    # founded
+    ("founded",      re.compile(_NAME + r"\s+(?:founded|established|created)\s+(?:the\s+)?" + _TARGET, re.U)),
+    # locatedIn
+    ("locatedIn",    re.compile(_TARGET + r"\s+(?:is|was) located (?:in|near|at)\s+" + _PLACE, re.U)),
+    # participatedIn
+    ("participatedIn", re.compile(_NAME + r"\s+(?:participated|took part|fought) in (?:the\s+)?" + _TARGET, re.U)),
+    # reformed
+    ("reformed",     re.compile(_NAME + r"\s+reformed\s+(?:the\s+)?" + _TARGET, re.U)),
+    # allied
+    ("alliedWith",   re.compile(_NAME + r"\s+(?:allied|formed an alliance) with\s+" + _TARGET, re.U)),
+]
+
+
+def extract_patterns(text: str, source_url: str) -> list[dict]:
+    """
+    Apply regex pattern rules over the full text to extract typed triples.
+    Produces bornIn, diedIn, studentOf, authored, servedIn, ruled, defeated,
+    conquered, attacked, founded, locatedIn, participatedIn, reformed, alliedWith,
+    influencedBy triples.
+    """
+    triples = []
+    seen = set()
+
+    for predicate, pattern in PATTERN_RULES:
+        for m in pattern.finditer(text):
+            subj = m.group(1).strip().rstrip(".,;")
+            obj  = m.group(2).strip().rstrip(".,;")
+            # Skip if too short, identical, or looks like a sentence fragment
+            if len(subj) < 3 or len(obj) < 3 or subj.lower() == obj.lower():
+                continue
+            if len(subj.split()) > 6 or len(obj.split()) > 6:
+                continue
+            key = (subj.lower(), predicate, obj.lower())
+            if key in seen:
+                continue
+            seen.add(key)
+            triples.append({
+                "subject":    subj,
+                "predicate":  predicate,
+                "object":     obj,
+                "source_url": source_url,
+            })
+
+    return triples
+
+
 def extract_cooccurrence(doc, source_url: str) -> list[dict]:
     """
     Simpler fallback: two named entities in the same sentence → co_occurs_with.
@@ -247,22 +331,25 @@ def run():
         clean = clean_text(page["text"])
         doc   = nlp(clean)
 
-        entities     = extract_entities(doc, url, title)
-        dep_triples  = extract_relations_dep(doc, url)
-        cooc_triples = extract_cooccurrence(doc, url)
-        role_triples = extract_roles(clean, url)
+        entities      = extract_entities(doc, url, title)
+        dep_triples   = extract_relations_dep(doc, url)
+        cooc_triples  = extract_cooccurrence(doc, url)
+        role_triples  = extract_roles(clean, url)
+        pat_triples   = extract_patterns(clean, url)
 
         all_entities.extend(entities)
         all_triples.extend(dep_triples)
         all_triples.extend(cooc_triples)
         all_triples.extend(role_triples)
+        all_triples.extend(pat_triples)
 
         cleaned_docs.append({"url": url, "title": title, "text": clean})
 
         print(f"  {len(entities)} entities, "
               f"{len(dep_triples)} dep-triples, "
               f"{len(cooc_triples)} co-occ triples, "
-              f"{len(role_triples)} role triples")
+              f"{len(role_triples)} role triples, "
+              f"{len(pat_triples)} pattern triples")
 
     # ── Save entities ──────────────────────────────────────────────────────────
     Path(ENTITY_FILE).parent.mkdir(exist_ok=True)

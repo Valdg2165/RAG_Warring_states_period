@@ -1,7 +1,7 @@
-  authored                       <-> authoredBy                      cos=-0.9561
-  heldPosition                   <-> positionHeldBy                  cos=-0.9430
-  authored                       <-> positionHeldBy                  cos=-0.5907
-  authoredBy                     <-> heldPosition                    cos=-0.5755
-  hasCapital                     <-> isCapitalOf                     cos=-0.5192
+  heldPosition                   <-> positionHeldBy                  cos=-0.9611
+  authored                       <-> authoredBy                      cos=-0.9513
+  authoredBy                     <-> heldPosition                    cos=-0.6548
+  authored                       <-> positionHeldBy                  cos=-0.6323
+  birthplaceOf                   <-> bornIn                          cos=-0.5920
 SWRL Rule vs KGE vector arithmetic (Exercise 8):
-  v(wasConqueredBy) ≈ v(atWarWith)?  cos=-0.1485
+  v(wasConqueredBy) ≈ v(atWarWith)?  cos=-0.0068

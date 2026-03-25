@@ -345,8 +345,6 @@ def ask_llm(prompt: str, model: str) -> str:
 # ── Baseline: LLM without KG ─────────────────────────────────────────────────
 
 _BASELINE_PROMPT = """\
-Answer the following question about the Warring States period of ancient China.
-Give a direct, factual answer in 2-4 sentences.
 
 Question: {question}
 """

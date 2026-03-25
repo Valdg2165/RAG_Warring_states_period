@@ -11316,6 +11316,7 @@ wsi:Ying_Zheng a ws:Person ;
         wsi:Zhao_Zheng,
         wsi:Zheng,
         wsi:Zhuangxiang ;
+    ws:declared wsi:Qin_Shi_Huang ;
     ws:replaced wsi:Li ;
     prov:wasDerivedFrom <https://en.wikipedia.org/wiki/Han_Fei>,
         <https://en.wikipedia.org/wiki/Qin_Shi_Huang>,
@@ -14303,6 +14304,27 @@ wsi:Hui a ws:Person ;
         <https://en.wikipedia.org/wiki/Warring_States_period>,
         <https://en.wikipedia.org/wiki/Zhou_dynasty> .
 
+wsi:Zhao_II a ws:Person ;
+    rdfs:label "Zhao II" ;
+    ws:coOccursWith wsi:Bibing_辟兵,
+        wsi:Dai_-_Yan,
+        wsi:Dao,
+        wsi:Gouyou_購由,
+        wsi:Huan_II,
+        wsi:Kang,
+        wsi:Tian_田,
+        wsi:Xiu ;
+    prov:wasDerivedFrom <https://en.wikipedia.org/wiki/State_of_Song> .
+
+wsi:Lu_Ban a ws:Person ;
+    rdfs:label "Lu Ban" ;
+    ws:coOccursWith wsi:Liao_-_Bo_Ya,
+        wsi:Liji,
+        wsi:Ou_Yezi,
+        wsi:Qing_Ji_-_Zhuan_Zhu,
+        wsi:Yao_Li ;
+    prov:wasDerivedFrom <https://en.wikipedia.org/wiki/Spring_and_Autumn_period> .
+
 wsi:Qin_Shi_Huang a ws:Person ;
     rdfs:label "Qin Shi Huang" ;
     ws:coOccursWith wsi:Argentine,
@@ -14348,27 +14370,6 @@ wsi:Qin_Shi_Huang a ws:Person ;
         <https://en.wikipedia.org/wiki/State_of_Qin>,
         <https://en.wikipedia.org/wiki/State_of_Yan>,
         <https://en.wikipedia.org/wiki/State_of_Zhao> .
-
-wsi:Zhao_II a ws:Person ;
-    rdfs:label "Zhao II" ;
-    ws:coOccursWith wsi:Bibing_辟兵,
-        wsi:Dai_-_Yan,
-        wsi:Dao,
-        wsi:Gouyou_購由,
-        wsi:Huan_II,
-        wsi:Kang,
-        wsi:Tian_田,
-        wsi:Xiu ;
-    prov:wasDerivedFrom <https://en.wikipedia.org/wiki/State_of_Song> .
-
-wsi:Lu_Ban a ws:Person ;
-    rdfs:label "Lu Ban" ;
-    ws:coOccursWith wsi:Liao_-_Bo_Ya,
-        wsi:Liji,
-        wsi:Ou_Yezi,
-        wsi:Qing_Ji_-_Zhuan_Zhu,
-        wsi:Yao_Li ;
-    prov:wasDerivedFrom <https://en.wikipedia.org/wiki/Spring_and_Autumn_period> .
 
 wsi:Gouyou_購由 a ws:Person ;
     rdfs:label "Gouyou 購由" ;
