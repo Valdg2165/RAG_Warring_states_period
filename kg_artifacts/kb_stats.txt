@@ -1,0 +1,30 @@
+Total RDF triples : 15068
+Unique entities   : 2109
+
+Instance type breakdown:
+  Person                    935
+  Place                     319
+  CulturalGroup             99
+  Organization              96
+  Event                     41
+  State                     19
+  PhilosophicalSchool       5
+  Dynasty                   5
+  Battle                    2
+
+Top predicates (excluding rdf:type/rdfs:label/prov):
+  coOccursWith              8165
+  attacked                  8
+  defeated                  7
+  conquered                 7
+  sent                      7
+  referenced                4
+  criticized                3
+  invaded                   3
+  mentioned                 2
+  captured                  2
+  blamed                    2
+  ruled                     2
+  enfeoffed                 2
+  overthrew                 2
+  replaced                  2

@@ -1,0 +1,148 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix ws: <http://warring-states.kg/ontology#> .
+
+<http://warring-states.kg/instance/ontology> a owl:Ontology ;
+    rdfs:label "Warring States China Knowledge Graph Ontology" .
+
+ws:Battle a owl:Class ;
+    rdfs:label "Battle" ;
+    rdfs:comment "A military engagement" .
+
+ws:CulturalGroup a owl:Class ;
+    rdfs:label "CulturalGroup" ;
+    rdfs:comment "An ethnic or cultural group" .
+
+ws:Dynasty a owl:Class ;
+    rdfs:label "Dynasty" ;
+    rdfs:comment "A Chinese dynasty" .
+
+ws:Event a owl:Class ;
+    rdfs:label "Event" ;
+    rdfs:comment "A historical event" .
+
+ws:Organization a owl:Class ;
+    rdfs:label "Organization" ;
+    rdfs:comment "An organisation (excluding states)" .
+
+ws:Person a owl:Class ;
+    rdfs:label "Person" ;
+    rdfs:comment "A historical person (ruler, general, philosopher, etc.)" .
+
+ws:PhilosophicalSchool a owl:Class ;
+    rdfs:label "PhilosophicalSchool" ;
+    rdfs:comment "A school of thought (Confucianism, Legalism, etc.)" .
+
+ws:Place a owl:Class ;
+    rdfs:label "Place" ;
+    rdfs:comment "A geographical place" .
+
+ws:State a owl:Class ;
+    rdfs:label "State" ;
+    rdfs:comment "A Chinese state during the Warring States period" .
+
+ws:annexed a owl:ObjectProperty ;
+    rdfs:label "annexed" .
+
+ws:appointed a owl:ObjectProperty ;
+    rdfs:label "appointed" .
+
+ws:associatedWith a owl:ObjectProperty ;
+    rdfs:label "associated with" .
+
+ws:attacked a owl:ObjectProperty ;
+    rdfs:label "attacked" .
+
+ws:captured a owl:ObjectProperty ;
+    rdfs:label "captured" .
+
+ws:coOccursWith a owl:ObjectProperty ;
+    rdfs:label "co-occurs with" .
+
+ws:compared a owl:ObjectProperty ;
+    rdfs:label "compared" .
+
+ws:conquered a owl:ObjectProperty ;
+    rdfs:label "conquered" .
+
+ws:convinced a owl:ObjectProperty ;
+    rdfs:label "convinced" .
+
+ws:criticized a owl:ObjectProperty ;
+    rdfs:label "criticized" .
+
+ws:defeated a owl:ObjectProperty ;
+    rdfs:label "defeated" .
+
+ws:defended a owl:ObjectProperty ;
+    rdfs:label "defended" .
+
+ws:deposed a owl:ObjectProperty ;
+    rdfs:label "deposed" .
+
+ws:described a owl:ObjectProperty ;
+    rdfs:label "described" .
+
+ws:enfeoffed a owl:ObjectProperty ;
+    rdfs:label "enfeoffed" .
+
+ws:influenced a owl:ObjectProperty ;
+    rdfs:label "influenced" .
+
+ws:installed a owl:ObjectProperty ;
+    rdfs:label "installed" .
+
+ws:invaded a owl:ObjectProperty ;
+    rdfs:label "invaded" .
+
+ws:invited a owl:ObjectProperty ;
+    rdfs:label "invited" .
+
+ws:luredInto a owl:ObjectProperty ;
+    rdfs:label "lured into" .
+
+ws:met a owl:ObjectProperty ;
+    rdfs:label "met" .
+
+ws:overthrew a owl:ObjectProperty ;
+    rdfs:label "overthrew" .
+
+ws:praised a owl:ObjectProperty ;
+    rdfs:label "praised" .
+
+ws:pressured a owl:ObjectProperty ;
+    rdfs:label "pressured" .
+
+ws:referenced a owl:ObjectProperty ;
+    rdfs:label "referenced" .
+
+ws:reformed a owl:ObjectProperty ;
+    rdfs:label "reformed" .
+
+ws:replaced a owl:ObjectProperty ;
+    rdfs:label "replaced" .
+
+ws:resembles a owl:ObjectProperty ;
+    rdfs:label "resembles" .
+
+ws:ruled a owl:ObjectProperty ;
+    rdfs:label "ruled" .
+
+ws:sent a owl:ObjectProperty ;
+    rdfs:label "sent" .
+
+ws:servedIn a owl:ObjectProperty ;
+    rdfs:label "served in" .
+
+ws:studied a owl:ObjectProperty ;
+    rdfs:label "studied" .
+
+ws:summoned a owl:ObjectProperty ;
+    rdfs:label "summoned" .
+
+ws:unified a owl:ObjectProperty ;
+    rdfs:label "unified" .
+
+ws:warned a owl:ObjectProperty ;
+    rdfs:label "warned" .
+

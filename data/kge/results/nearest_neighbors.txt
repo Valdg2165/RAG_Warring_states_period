@@ -1,0 +1,53 @@
+=== Nearest Neighbours (TransE, top-5) ===
+
+BaiQi:
+  1. (not found)
+
+Confucius:
+  1. Lao  (cos=0.9130)
+  2. Mozi  (cos=0.9088)
+  3. Confucianism  (cos=0.9073)
+  4. Goujian  (cos=0.9055)
+  5. Chinese  (cos=0.9040)
+
+Qin:
+  1. Zheng  (cos=0.9553)
+  2. Wey  (cos=0.9460)
+  3. Han  (cos=0.9441)
+  4. Chen  (cos=0.9297)
+  5. Cao  (cos=0.9277)
+
+Zhao:
+  1. Yan  (cos=0.9712)
+  2. Su  (cos=0.9559)
+  3. Huiwen  (cos=0.9552)
+  4. Jia  (cos=0.9523)
+  5. Wuling  (cos=0.9426)
+
+studentOf:
+  1. hasStudent  (cos=0.7426)
+  2. Battle_of_the_Arius  (cos=0.4154)
+  3. diedIn  (cos=0.4070)
+  4. Battle_of_the_Great_Plains  (cos=0.4011)
+  5. overthrew  (cos=0.4009)
+
+Mencius:
+  1. Confucianism  (cos=0.9333)
+  2. Mohism  (cos=0.9333)
+  3. Xunzi  (cos=0.9318)
+  4. Chinese  (cos=0.9197)
+  5. Sima_Qian  (cos=0.9104)
+
+Legalism:
+  1. Zhuangzi  (cos=0.9629)
+  2. Lao_Tzu  (cos=0.9618)
+  3. Xunzi  (cos=0.9617)
+  4. Shang_Yang  (cos=0.9591)
+  5. Zhuang_Zhou  (cos=0.9398)
+
+Confucianism:
+  1. Laozi  (cos=0.9534)
+  2. Mozi  (cos=0.9526)
+  3. Lao_Tzu  (cos=0.9451)
+  4. Lao  (cos=0.9438)
+  5. Sima_Qian  (cos=0.9393)
