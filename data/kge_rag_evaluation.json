@@ -1,0 +1,152 @@
+[
+  {
+    "question": "Who were the students of Confucius?",
+    "reference": "Zisi, Tantai Mieming, and others",
+    "answer": "Related entities found: Confucius, Han_Fei, Li_Si, Lu, Wey, Wu_Qi, Xunzi, Zhao, Zhuangzi, philosopher.",
+    "correct": true,
+    "detected_entities": [
+      "confucius"
+    ],
+    "similar_entities": [
+      "Lu",
+      "Jesuits",
+      "Mozi",
+      "Confucian",
+      "Xunzi",
+      "Wey",
+      "Zhongshan",
+      "Mencius76"
+    ],
+    "context_triples": 74
+  },
+  {
+    "question": "Which states were at war with the State of Qin?",
+    "reference": "Zhao, Wei, Han, Chu, Yan, Qi",
+    "answer": "The following states were at war with the State of Qin:\n- Han\n- Qi\n- Shu\n- Wei\n- Zhao",
+    "correct": true,
+    "detected_entities": [
+      "the state of qin",
+      "state of qin",
+      "state of qi",
+      "states",
+      "e a",
+      "qin"
+    ],
+    "similar_entities": [
+      "Robert_G",
+      "Mark_Warren",
+      "ICTV",
+      "Universitas_Gadjah_Mada",
+      "James_R",
+      "Eric_L",
+      "Zichan",
+      "Jiang_Qing90"
+    ],
+    "context_triples": 54
+  },
+  {
+    "question": "Who did Aristotle influence?",
+    "reference": "Alexander the Great, Strato of Lampsacus",
+    "answer": "According to the facts, Aristotle influenced Alexander_the_Great, Plato, Theophrastus, and Hippocrates.",
+    "correct": true,
+    "detected_entities": [
+      "aristotle"
+    ],
+    "similar_entities": [
+      "Theophrastus",
+      "Democritus",
+      "Heraclitus",
+      "Hippasus",
+      "Nausiphanes",
+      "Parmenides",
+      "Theodoros_the_Atheist",
+      "Timon_of_Phlius"
+    ],
+    "context_triples": 120
+  },
+  {
+    "question": "Who is an intellectual descendant of Confucius?",
+    "reference": "Zisi, Mencius (via Zisi studentOf chain)",
+    "answer": "Related entities found: 326_BCSpring_299_BC, Chu, Confucius, Dan, Huiwen, Jing_Ke, Qin, Spring_299_BC266_BC, Wang_Jian, Wuling.",
+    "correct": false,
+    "detected_entities": [
+      "confucius",
+      "dan"
+    ],
+    "similar_entities": [
+      "Wuling",
+      "Lie",
+      "Daoxiang",
+      "Huiwen",
+      "Youmiao",
+      "Zhong",
+      "Xiaocheng",
+      "Zheng"
+    ],
+    "context_triples": 72
+  },
+  {
+    "question": "Which people held a position as writer?",
+    "reference": "Sun Tzu, Li Si, Sima Qian, Mencius, Laozi, Confucius",
+    "answer": "Related entities found: Confucius, Han_Fei, Laozi, Li_Si, Mencius, Qin_Shi_Huang, Shang_Yang, Sima_Qian, Sun_Tzu, Wu_Qi.",
+    "correct": true,
+    "detected_entities": [
+      "writer"
+    ],
+    "similar_entities": [
+      "philosopher",
+      "minister",
+      "teacher",
+      "astrologer",
+      "poet",
+      "mathematician",
+      "politician",
+      "archivist"
+    ],
+    "context_triples": 56
+  },
+  {
+    "question": "Who was born in the State of Zhao?",
+    "reference": "Xunzi (bornIn Zhao)",
+    "answer": "According to the facts, Zhao was the birthplace of **Xunzi**.",
+    "correct": true,
+    "detected_entities": [
+      "the state of zhao",
+      "state of zhao",
+      "zhao"
+    ],
+    "similar_entities": [
+      "Lian_Po",
+      "Lian_Pos",
+      "Shanxi_Province",
+      "Wèi",
+      "Wang_He",
+      "Hebei_Province",
+      "Qinshui_County",
+      "Weilie"
+    ],
+    "context_triples": 23
+  },
+  {
+    "question": "Which philosophers influenced Epicharmus of Kos?",
+    "reference": "Pythagoras, Xenophanes (from influencedBy triples)",
+    "answer": "According to the knowledge graph, Heraclitus, Pythagoras, Hippasus, Zoroaster, Xenophanes, Pherecydes_of_Syros, Thales, Anaximander, Heraclitus, Pythagoras, philosopher, Confucian, Han_Fei, Laozi, philosopher, Shang_Yang, philosopher, Sima_Qian, philosopher, Mencius, philosopher, Han_Fei, philosopher, Shang_Yang, philosopher, Laozi, philosopher, Confucius, and Q109144973 were philosophers that influenced Epicharmus of Kos.",
+    "correct": true,
+    "detected_entities": [
+      "epicharmus of kos",
+      "philosopher",
+      "influenced"
+    ],
+    "similar_entities": [
+      "wasCapturedBy",
+      "wasConvincedBy",
+      "sent",
+      "Sima_Tan363",
+      "Q109144973",
+      "partOf",
+      "14_July_2025",
+      "pre-Julian"
+    ],
+    "context_triples": 34
+  }
+]

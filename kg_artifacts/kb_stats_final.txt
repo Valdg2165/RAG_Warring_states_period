@@ -1,0 +1,41 @@
+=== Warring States KG — Final Statistics ===
+
+Total triples      : 25,873
+Unique subjects    : 2,713
+Added by expansion : 10,365
+  - Inverse rules  : (via INVERSE_PAIRS)
+  - Chain rules    : (SPARQL on local graph)
+  - Wikidata 1-hop : 513
+
+Instance types:
+  Person                              935
+  Place                               482
+  Battle                              175
+  CulturalGroup                       99
+  Organization                        96
+  Event                               41
+  State                               19
+  Dynasty                             5
+  PhilosophicalSchool                 5
+
+Top predicates:
+  coOccursWith                        15,547
+  year                                191
+  hasParticipant                      164
+  locatedIn                           162
+  authored                            100
+  authoredBy                          100
+  heldPosition                        41
+  positionHeldBy                      41
+  deathYear                           16
+  birthYear                           15
+  bornIn                              14
+  birthplaceOf                        14
+  wasAttackedBy                       8
+  attacked                            8
+  wasDefeatedBy                       7
+  wasConqueredBy                      7
+  defeated                            7
+  wasSentBy                           7
+  sent                                7
+  conquered                           7

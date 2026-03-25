@@ -1,0 +1,86 @@
+[
+  {
+    "question": "Who were the students of Confucius?",
+    "reference": "Zisi, Tantai Mieming, and others",
+    "baseline_answer": "The question cannot be answered because the context does not specify who the students of Confucius were.",
+    "baseline_correct": true,
+    "rag_nl_answer": "Bu Shang, Chen Kang, Fu Buqi, Gao Chai, and 14 others.",
+    "rag_correct": true,
+    "rag_rows": 20,
+    "repaired": false,
+    "attempts": 1,
+    "sparql": "PREFIX ws:   <http://warring-states.kg/ontology#>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nSELECT ?studentName WHERE {\n  ?teacher rdfs:label ?tl .\n  FILTER(CONTAINS(LCASE(STR(?tl)), \"confucius\"))\n  ?student ws:studentOf ?teacher .\n  ?student rdfs:label ?studentName .\n} LIMIT 20"
+  },
+  {
+    "question": "Which states were at war with the State of Qin?",
+    "reference": "Zhao, Wei, Han, Chu, Yan, Qi",
+    "baseline_answer": "The State of Qin was at war with the State of Wei, the State of Han, and the State of Zhao during the Warring States period.",
+    "baseline_correct": true,
+    "rag_nl_answer": "Shu, Han, Qi, Wei, and 2 others.",
+    "rag_correct": true,
+    "rag_rows": 6,
+    "repaired": false,
+    "attempts": 1,
+    "sparql": "PREFIX ws:   <http://warring-states.kg/ontology#>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nSELECT ?stateName WHERE {\n  ?qin rdfs:label ?ql .\n  FILTER(CONTAINS(LCASE(STR(?ql)), \"qin\"))\n  ?state ws:atWarWith ?qin .\n  ?state rdfs:label ?stateName .\n} LIMIT 20"
+  },
+  {
+    "question": "Who did Aristotle influence?",
+    "reference": "Alexander the Great, Strato of Lampsacus",
+    "baseline_answer": "The passage does not mention Aristotle, or his influence on the Warring States period of ancient China.",
+    "baseline_correct": false,
+    "rag_nl_answer": "Sure, here's the one sentence you requested:\n\nAristotle was an influential figure who influenced the philosophical ideas of several early philosophers, including Democritus, Heraclitus, Anaximander, Empedocles, and others.",
+    "rag_correct": false,
+    "rag_rows": 8,
+    "repaired": false,
+    "attempts": 1,
+    "sparql": "PREFIX ws:   <http://warring-states.kg/ontology#>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nSELECT DISTINCT ?personName WHERE {\n  ?aristotle rdfs:label ?al .\n  FILTER(CONTAINS(LCASE(STR(?al)), \"aristotle\"))\n  ?aristotle ws:influencedBy ?person .\n  ?person rdfs:label ?personName .\n} LIMIT 20"
+  },
+  {
+    "question": "Who is an intellectual descendant of Confucius?",
+    "reference": "Zisi, Mencius (via Zisi studentOf chain)",
+    "baseline_answer": "The question cannot be answered as there is no direct, factual information in the context about an intellectual descendant of Confucius.",
+    "baseline_correct": false,
+    "rag_nl_answer": "(no results from knowledge graph)",
+    "rag_correct": false,
+    "rag_rows": 0,
+    "repaired": true,
+    "attempts": 3,
+    "sparql": "PREFIX ws:   <http://warring-states.kg/ontology#>\nPREFIX wsi:  <http://warring-states.kg/instance/>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nPREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n\nSELECT DISTINCT ?descendantName WHERE {\n  ?teacher rdfs:label \"Confucius\".\n  ?descendant rdfs:label ?descendantName .\n  ?descendant ws:hasPart ?teacher .\n  FILTER (CONTAINS(STR(?descendant), \"name\"))\n} LIMIT 20"
+  },
+  {
+    "question": "Which people held a position as writer?",
+    "reference": "Sun Tzu, Li Si, Sima Qian, Mencius, Laozi, Confucius",
+    "baseline_answer": "The Warring States period of ancient China was ruled by nomadic tribes, and they held the position of writer.",
+    "baseline_correct": false,
+    "rag_nl_answer": "Sun Tzu, Li Si, Sima Qian, Mencius, and 2 others.",
+    "rag_correct": true,
+    "rag_rows": 6,
+    "repaired": false,
+    "attempts": 1,
+    "sparql": "PREFIX ws:   <http://warring-states.kg/ontology#>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nSELECT ?personName WHERE {\n  ?person ws:heldPosition ?pos .\n  ?pos rdfs:label ?pl .\n  FILTER(CONTAINS(LCASE(STR(?pl)), \"writer\"))\n  ?person rdfs:label ?personName .\n} LIMIT 20"
+  },
+  {
+    "question": "Who was born in the State of Zhao?",
+    "reference": "Xunzi (bornIn Zhao)",
+    "baseline_answer": "The context does not provide any information about who was born in the State of Zhao, so I cannot answer this question from the provided context.",
+    "baseline_correct": false,
+    "rag_nl_answer": "Xunzi was born in the State of Zhao.",
+    "rag_correct": true,
+    "rag_rows": 1,
+    "repaired": false,
+    "attempts": 1,
+    "sparql": "PREFIX ws:   <http://warring-states.kg/ontology#>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nSELECT DISTINCT ?personName WHERE {\n  {\n    ?person ws:bornIn ?place .\n    FILTER(CONTAINS(LCASE(STR(?place)), \"zhao\"))\n  } UNION {\n    ?place ws:birthplaceOf ?person .\n    FILTER(CONTAINS(LCASE(STR(?place)), \"zhao\"))\n  }\n  ?person rdfs:label ?personName .\n} LIMIT 20"
+  },
+  {
+    "question": "Which philosophers influenced Epicharmus of Kos?",
+    "reference": "Pythagoras, Xenophanes (from influencedBy triples)",
+    "baseline_answer": "The question cannot be answered as the context does not provide information about which philosophers influenced Epicharmus of Kos.",
+    "baseline_correct": false,
+    "rag_nl_answer": "Sure, here is the one sentence you requested:\n\nHeraclitus and Pythagoras influenced Epicharmus of Kos.",
+    "rag_correct": true,
+    "rag_rows": 2,
+    "repaired": false,
+    "attempts": 1,
+    "sparql": "PREFIX ws:   <http://warring-states.kg/ontology#>\nPREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\nSELECT ?philosopherName WHERE {\n  ?epicharmus rdfs:label ?el .\n  FILTER(CONTAINS(LCASE(STR(?el)), \"epicharmus\"))\n  ?epicharmus ws:influencedBy ?philosopher .\n  ?philosopher rdfs:label ?philosopherName .\n} LIMIT 20"
+  }
+]
