@@ -57,9 +57,9 @@ MODEL_FILE   = RESULTS_DIR / "model_distmult.pt"
 WS_ONTO = "http://warring-states.kg/ontology#"
 WS_INST = "http://warring-states.kg/instance/"
 
-TOP_K_SIMILAR       = 3    # extra entities retrieved via embedding similarity
-MAX_TRIPLES_PER_ENT = 10   # triples fetched per entity (raised to capture more relations)
-MAX_CONTEXT_TRIPLES = 15  # hard cap on context size
+TOP_K_SIMILAR       = 6    # extra entities retrieved via embedding similarity
+MAX_TRIPLES_PER_ENT = 50   # triples fetched per entity
+MAX_CONTEXT_TRIPLES = 100  # hard cap on context size
 
 # Predicates to skip (too noisy for context)
 NOISE_PREDS = {"coOccursWith", "wasDerivedFrom", "type",
@@ -267,14 +267,34 @@ def _shorten(uri: str) -> str:
     return uri
 
 
+# Normalize semantically equivalent predicates so the LLM sees one consistent label
+_PRED_NORMALIZE = {
+    # War / conflict → atWarWith
+    "attacked":        "atWarWith",
+    "conquered":       "atWarWith",
+    "defeated":        "atWarWith",
+    "wasAttackedBy":   "atWarWith",
+    "wasConqueredBy":  "atWarWith",
+    "wasDefeatedBy":   "atWarWith",
+    "foughtAgainst":   "atWarWith",
+    "atWarWith":       "atWarWith",
+    # Intellectual lineage → taughtBy / taught
+    "studentOf":                  "taughtBy",
+    "hasStudent":                 "taught",
+    "intellectualDescendantOf":   "intellectualDescendantOf",
+}
+
+
 def _fmt_triple(s: str, p: str, o: str):
-    """Format one triple as a readable sentence; return None for noisy predicates."""
+    """Format one triple as a readable line; return None for noisy predicates."""
     p_short = _shorten(p)
     if p_short in NOISE_PREDS:
         return None
+    # Normalize predicate to a consistent label
+    p_label = _PRED_NORMALIZE.get(p_short, p_short)
     s_ = _shorten(s).replace("_", " ")
     o_ = _shorten(o).replace("_", " ")
-    return f"{s_} | {p_short} | {o_}"
+    return f"{s_} | {p_label} | {o_}"
 
 
 def get_entity_triples(g: Graph, full_uri: str,
