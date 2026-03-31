@@ -44,7 +44,7 @@ ollama run llama3
 
 ---
 
-## ▶️ Usage
+## Usage
 
 Run the Gradio app:
 
