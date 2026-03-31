@@ -1,14 +1,3 @@
-"""
-RDF Knowledge Graph builder for the Warring States period.
-
-Input:  data/extracted_knowledge.csv   (NER entities)
-        data/relation_triples.csv       (dep + co-occurrence triples)
-
-Output: kg_artifacts/ontology.ttl       (OWL ontology — classes & properties)
-        kg_artifacts/warring_states.ttl (populated KG instances)
-        kg_artifacts/kb_stats.txt       (statistics)
-"""
-
 import csv
 import re
 from pathlib import Path
@@ -16,22 +5,15 @@ from collections import defaultdict
 
 from rdflib import Graph, Namespace, URIRef, Literal, RDF, RDFS, OWL, XSD
 
-# ── Namespaces ─────────────────────────────────────────────────────────────────
 WS   = Namespace("http://warring-states.kg/ontology#")
 WSI  = Namespace("http://warring-states.kg/instance/")
 PROV = Namespace("http://www.w3.org/ns/prov#")
 
-# ── I/O paths ─────────────────────────────────────────────────────────────────
 ENTITY_FILE  = "data/extracted_knowledge.csv"
 TRIPLES_FILE = "data/relation_triples.csv"
 ONTO_FILE    = "kg_artifacts/ontology.ttl"
 KG_FILE      = "kg_artifacts/warring_states.ttl"
 STATS_FILE   = "kg_artifacts/kb_stats.txt"
-
-
-# ── 1.  Curated entity → class mapping ────────────────────────────────────────
-# Hand-coded for the most important entities; the rest are classified
-# by their NER label (PERSON → ws:Person, GPE/LOC → ws:Place, etc.)
 
 KNOWN_STATES = {
     "Qin", "Chu", "Wei", "Zhao", "Han", "Yan", "Qi",
@@ -63,7 +45,6 @@ KNOWN_DYNASTIES = {
     "Shang dynasty", "Western Zhou", "Eastern Zhou",
 }
 
-# ── 2.  Predicate → OWL property mapping ──────────────────────────────────────
 PREDICATE_MAP = {
     # military
     "attack":    "attacked",
@@ -127,10 +108,8 @@ PREDICATE_MAP = {
 }
 
 
-# ── Helper functions ───────────────────────────────────────────────────────────
 
 def uri_safe(name: str) -> str:
-    """Turn a label into a URI-safe string."""
     name = name.strip()
     name = re.sub(r"[^\w\s-]", "", name)
     name = re.sub(r"\s+", "_", name)
@@ -142,13 +121,11 @@ def instance_uri(name: str) -> URIRef:
 
 
 def classify_entity(name: str, ner_label: str) -> URIRef | None:
-    """Return the OWL class for an entity."""
     if name in KNOWN_STATES:    return WS.State
     if name in KNOWN_PERSONS:   return WS.Person
     if name in KNOWN_BATTLES:   return WS.Battle
     if name in KNOWN_SCHOOLS:   return WS.PhilosophicalSchool
     if name in KNOWN_DYNASTIES: return WS.Dynasty
-    # Fall back on NER label
     mapping = {
         "PERSON": WS.Person,
         "GPE":    WS.Place,
@@ -160,7 +137,6 @@ def classify_entity(name: str, ner_label: str) -> URIRef | None:
     return mapping.get(ner_label)
 
 
-# ── 3. Build ontology graph ────────────────────────────────────────────────────
 
 def build_ontology() -> Graph:
     g = Graph()
@@ -173,7 +149,6 @@ def build_ontology() -> Graph:
     g.add((onto, RDF.type, OWL.Ontology))
     g.add((onto, RDFS.label, Literal("Warring States China Knowledge Graph Ontology")))
 
-    # ── Classes
     classes = {
         WS.State:              "A Chinese state during the Warring States period",
         WS.Person:             "A historical person (ruler, general, philosopher, etc.)",
@@ -190,7 +165,6 @@ def build_ontology() -> Graph:
         g.add((cls, RDFS.label, Literal(cls.split("#")[-1])))
         g.add((cls, RDFS.comment, Literal(comment)))
 
-    # ── Object Properties
     obj_props = {
         # military
         WS.attacked:      ("State",  "State",  "attacked"),
@@ -229,7 +203,6 @@ def build_ontology() -> Graph:
         WS.resembles:     ("Person", "Person", "resembles"),
         WS.praised:       ("Person", "Person", "praised"),
         WS.influenced:    ("Person", "Person", "influenced"),
-        # generic
         WS.coOccursWith:  ("Person", "Person", "co-occurs with"),
     }
     for prop, (dom, rng, label) in obj_props.items():
@@ -239,8 +212,6 @@ def build_ontology() -> Graph:
     return g
 
 
-# ── 4. Build instance graph ────────────────────────────────────────────────────
-
 def build_instance_graph() -> Graph:
     g = Graph()
     g.bind("ws",  WS)
@@ -249,8 +220,7 @@ def build_instance_graph() -> Graph:
     g.bind("rdfs",RDFS)
     g.bind("prov",PROV)
 
-    # Track all added entities
-    added: dict[str, URIRef] = {}   # name → URI
+    added: dict[str, URIRef] = {}   
 
     def ensure_entity(name: str, ner_label: str = ""):
         if name in added:
@@ -263,7 +233,6 @@ def build_instance_graph() -> Graph:
         added[name] = uri
         return uri
 
-    # ── Load & add entities from NER
     with open(ENTITY_FILE, encoding="utf-8") as f:
         for row in csv.DictReader(f):
             name  = row["entity"].strip()
@@ -274,7 +243,6 @@ def build_instance_graph() -> Graph:
             uri = ensure_entity(name, label)
             g.add((uri, PROV.wasDerivedFrom, URIRef(src)))
 
-    # ── Load & convert triples
     skipped = 0
     added_triples = 0
     with open(TRIPLES_FILE, encoding="utf-8") as f:
@@ -284,15 +252,12 @@ def build_instance_graph() -> Graph:
             obj_name  = row["object"].strip()
             src       = row["source_url"]
 
-            # Skip very noisy objects
             if len(obj_name) < 2 or len(obj_name) > 80:
                 skipped += 1
                 continue
-            # Skip pure-number objects
             if re.fullmatch(r"[\d\s\-–,\.BCbc]+", obj_name):
                 skipped += 1
                 continue
-            # Skip publisher/academic ORGs that sneak in as objects
             noise_orgs = {
                 "Cambridge University Press", "Oxford University Press",
                 "Routledge", "Brill", "Springer", "Princeton University Press",
@@ -322,7 +287,6 @@ def build_instance_graph() -> Graph:
     return g, added
 
 
-# ── 5. Main ────────────────────────────────────────────────────────────────────
 
 def run():
     Path("kg_artifacts").mkdir(exist_ok=True)
@@ -337,7 +301,6 @@ def run():
     inst_g.serialize(destination=KG_FILE, format="turtle")
     print(f"  KG saved       -> {KG_FILE}  ({len(inst_g)} triples)")
 
-    # ── Stats
     from collections import Counter
     type_counts = Counter()
     for _, _, o in inst_g.triples((None, RDF.type, None)):

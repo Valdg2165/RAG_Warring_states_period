@@ -19,17 +19,14 @@ from collections import defaultdict
 
 import spacy
 
-# ── Config ─────────────────────────────────────────────────────────────────────
 
 INPUT_FILE   = "data/crawler_output.jsonl"
 ENTITY_FILE  = "data/extracted_knowledge.csv"
 CLEANED_FILE = "data/cleaned_texts.jsonl"
 TRIPLES_FILE = "data/relation_triples.csv"
 
-# Entity types to keep
 KEEP_LABELS = {"PERSON", "ORG", "GPE", "LOC", "DATE", "EVENT", "NORP"}
 
-# Noise patterns to strip from Wikipedia text
 NOISE_PATTERNS = [
     r"^\s*\[edit\]\s*$",
     r"^\s*See also\s*$",
@@ -37,16 +34,14 @@ NOISE_PATTERNS = [
     r"^\s*External links\s*$",
     r"^\s*Notes\s*$",
     r"^\s*Further reading\s*$",
-    r"^\s*\d+\s*$",              # bare page numbers
-    r"^\s*\^.*$",                # citation markers
+    r"^\s*\d+\s*$",              
+    r"^\s*\^.*$",                
     r"ISBN\s[\d\-X]+",
 ]
 
-# Dependency relations that signal a predicate between subject and object
 SUBJ_DEPS  = {"nsubj", "nsubjpass"}
 OBJ_DEPS   = {"dobj", "pobj", "attr", "nmod"}
 
-# Role/occupation keywords to capture as heldPosition triples
 ROLE_KEYWORDS = {
     "chancellor", "minister", "general", "philosopher", "strategist",
     "statesman", "politician", "king", "duke", "lord", "emperor",
@@ -55,7 +50,6 @@ ROLE_KEYWORDS = {
     "military strategist", "political philosopher",
 }
 
-# Patterns: "[Name] was a/an <role>" or "[Name], <role> of <Place>"
 _ROLE_WAS   = re.compile(
     r"([A-Z][a-zA-Z\s\-]+?)\s+was\s+(?:a|an)\s+([\w\s]+?)(?:\s+of\b|\s+in\b|[,\.])",
     re.UNICODE,
@@ -65,30 +59,25 @@ _ROLE_APPOS = re.compile(
     re.UNICODE,
 )
 
-MODEL = "en_core_web_trf"   # swap to "en_core_web_sm" if memory is tight
+MODEL = "en_core_web_trf"  
 
-# ── 1. Text cleaning ──────────────────────────────────────────────────────────
 
 def clean_text(raw: str) -> str:
     lines = raw.splitlines()
     cleaned = []
     for line in lines:
-        # Drop noise lines
         if any(re.match(p, line) for p in NOISE_PATTERNS):
             continue
-        # Drop very short lines (likely headers / stray bullets)
         stripped = line.strip()
         if len(stripped) < 20:
             continue
         cleaned.append(stripped)
     text = " ".join(cleaned)
-    # Collapse multiple spaces / dashes
     text = re.sub(r"\s{2,}", " ", text)
     text = re.sub(r"–{2,}", "—", text)
     return text.strip()
 
 
-# ── 2. NER ─────────────────────────────────────────────────────────────────────
 
 def extract_entities(doc, source_url: str, source_title: str) -> list[dict]:
     rows = []
@@ -97,7 +86,6 @@ def extract_entities(doc, source_url: str, source_title: str) -> list[dict]:
         if ent.label_ not in KEEP_LABELS:
             continue
         text = ent.text.strip()
-        # Skip single characters, numbers only, very long strings (noise)
         if len(text) < 2 or re.fullmatch(r"[\d\s\-–,\.]+", text) or len(text) > 80:
             continue
         key = (text.lower(), ent.label_)
@@ -113,13 +101,8 @@ def extract_entities(doc, source_url: str, source_title: str) -> list[dict]:
     return rows
 
 
-# ── 3. Relation extraction (dependency + co-occurrence) ────────────────────────
 
 def extract_relations_dep(doc, source_url: str) -> list[dict]:
-    """
-    For each sentence, find entity pairs linked by a verb via dependency parsing.
-    Pattern: SUBJ_entity —[verb]→ OBJ_entity
-    """
     triples = []
     for sent in doc.sents:
         ents_in_sent = [e for e in sent.ents if e.label_ in KEEP_LABELS]
@@ -151,13 +134,6 @@ def extract_relations_dep(doc, source_url: str) -> list[dict]:
 
 
 def extract_roles(text: str, source_url: str) -> list[dict]:
-    """
-    Extract heldPosition triples from the lead paragraph.
-    Captures patterns like:
-      "Shang Yang was a chancellor of Qin"   → (Shang Yang, heldPosition, chancellor)
-      "Sun Tzu, military strategist of Wu"   → (Sun Tzu, heldPosition, military strategist)
-    Only looks at the first 1000 characters (lead paragraph) to stay precise.
-    """
     lead = text[:1000]
     triples = []
     seen = set()
@@ -194,10 +170,6 @@ def extract_roles(text: str, source_url: str) -> list[dict]:
 
 
 def extract_cooccurrence(doc, source_url: str) -> list[dict]:
-    """
-    Simpler fallback: two named entities in the same sentence → co_occurs_with.
-    Only emit pairs where both are PERSON / ORG / GPE (skip DATE/LOC noise).
-    """
     COOC_LABELS = {"PERSON", "ORG", "GPE", "NORP"}
     triples = []
     seen = set()
@@ -220,12 +192,10 @@ def extract_cooccurrence(doc, source_url: str) -> list[dict]:
     return triples
 
 
-# ── Main ───────────────────────────────────────────────────────────────────────
 
 def run():
     print(f"Loading spaCy model: {MODEL}")
     nlp = spacy.load(MODEL)
-    # Increase max length for large Wikipedia articles
     nlp.max_length = 2_000_000
 
     pages = []
@@ -264,7 +234,6 @@ def run():
               f"{len(cooc_triples)} co-occ triples, "
               f"{len(role_triples)} role triples")
 
-    # ── Save entities ──────────────────────────────────────────────────────────
     Path(ENTITY_FILE).parent.mkdir(exist_ok=True)
     with open(ENTITY_FILE, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=["entity", "label", "source_title", "source_url"])
@@ -272,20 +241,17 @@ def run():
         writer.writerows(all_entities)
     print(f"\nEntities saved -> {ENTITY_FILE}  ({len(all_entities)} rows)")
 
-    # ── Save triples ───────────────────────────────────────────────────────────
     with open(TRIPLES_FILE, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=["subject", "predicate", "object", "source_url"])
         writer.writeheader()
         writer.writerows(all_triples)
     print(f"Triples saved  -> {TRIPLES_FILE}  ({len(all_triples)} rows)")
 
-    # ── Save cleaned texts ─────────────────────────────────────────────────────
     with open(CLEANED_FILE, "w", encoding="utf-8") as f:
         for doc in cleaned_docs:
             f.write(json.dumps(doc, ensure_ascii=False) + "\n")
     print(f"Cleaned texts  -> {CLEANED_FILE}")
 
-    # ── Quick stats ────────────────────────────────────────────────────────────
     from collections import Counter
     label_counts = Counter(e["label"] for e in all_entities)
     print("\nEntity label breakdown:")

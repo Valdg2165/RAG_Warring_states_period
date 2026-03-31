@@ -1,27 +1,5 @@
-"""
-train_kge.py  —  Train and evaluate TransE + DistMult on the Warring States KG.
-
-Reads : data/kge/train.txt, valid.txt, test.txt
-        data/kge/entity2id.txt, relation2id.txt
-
-Outputs (all under data/kge/results/):
-  metrics_transE.json       — MRR, Hits@1/3/10
-  metrics_distmult.json
-  comparison_table.txt      — side-by-side comparison
-  nearest_neighbors.txt     — top-5 neighbours for selected entities
-  relation_analysis.txt     — symmetric / inverse / composition check
-  tsne_plot.png             — 2-D t-SNE of entity embeddings
-  exercise8_kge_vs_swrl.txt — vector arithmetic comparison with SWRL rules
-
-Usage:
-    python src/kge/train_kge.py [--data-dir data/kge]
-                                [--results-dir data/kge/results]
-                                [--dim 100] [--epochs 200] [--lr 0.001]
-                                [--batch 512]
-"""
-
 import os
-os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"   # fix Anaconda OpenMP conflict on Windows
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"  
 
 import argparse
 import json
@@ -30,7 +8,6 @@ import random
 import time
 from pathlib import Path
 
-# Import sklearn BEFORE torch to avoid OpenMP DLL conflict on Windows/Anaconda
 import sklearn
 from sklearn.manifold import TSNE
 import matplotlib
@@ -46,7 +23,6 @@ from torch.utils.data import DataLoader, TensorDataset
 SEED = 42
 random.seed(SEED); np.random.seed(SEED); torch.manual_seed(SEED)
 
-# ── Data loading ──────────────────────────────────────────────────────────────
 
 def load_splits(data_dir: Path):
     def read(fname):
@@ -80,17 +56,12 @@ def load_mappings_raw(path: Path):
     m = {}
     for line in path.read_text(encoding="utf-8").splitlines():
         parts = line.split("\t", 2)
-        m[int(parts[0])] = parts[1]   # short name
+        m[int(parts[0])] = parts[1]   
     return m
 
 
-# ── KGE Models ────────────────────────────────────────────────────────────────
 
 class TransE(nn.Module):
-    """
-    TransE: score(h,r,t) = -‖h + r - t‖₂
-    Lower score = more plausible triple.
-    """
     def __init__(self, n_ent, n_rel, dim, margin=1.0):
         super().__init__()
         self.dim    = dim
@@ -99,7 +70,6 @@ class TransE(nn.Module):
         self.rel_emb = nn.Embedding(n_rel, dim)
         nn.init.uniform_(self.ent_emb.weight, -6/math.sqrt(dim), 6/math.sqrt(dim))
         nn.init.uniform_(self.rel_emb.weight, -6/math.sqrt(dim), 6/math.sqrt(dim))
-        # Normalize relation embeddings at init
         self.rel_emb.weight.data = F.normalize(self.rel_emb.weight.data, p=2, dim=1)
 
     def forward(self, h, r, t):
@@ -109,15 +79,10 @@ class TransE(nn.Module):
         return -torch.norm(h_e + r_e - t_e, p=2, dim=1)   # negative L2
 
     def score(self, h, r, t):
-        """Higher = more plausible (negated distance)."""
         return self.forward(h, r, t)
 
 
 class DistMult(nn.Module):
-    """
-    DistMult: score(h,r,t) = Σ h ⊙ r ⊙ t
-    Higher score = more plausible triple.
-    """
     def __init__(self, n_ent, n_rel, dim):
         super().__init__()
         self.dim     = dim
@@ -136,10 +101,8 @@ class DistMult(nn.Module):
         return self.forward(h, r, t)
 
 
-# ── Training ──────────────────────────────────────────────────────────────────
 
 def negative_sample(triples, n_ent, batch_size, n_neg=1):
-    """For each positive triple corrupt either head or tail randomly."""
     pos = random.sample(triples, min(batch_size, len(triples)))
     neg = []
     for h, r, t in pos:
@@ -169,11 +132,9 @@ def train_epoch(model, optimizer, train_triples, n_ent, batch_size, model_name):
         neg_score = model.score(nh, nr, nt)
 
         if model_name == "TransE":
-            # Margin-based loss: max(0, margin - pos + neg)
             margin = model.margin
             loss = F.relu(margin - pos_score + neg_score).mean()
         else:
-            # Binary cross-entropy loss
             scores = torch.cat([pos_score, neg_score])
             labels = torch.cat([torch.ones(len(pos)), torch.zeros(len(neg))])
             loss = F.binary_cross_entropy_with_logits(scores, labels)
@@ -183,7 +144,6 @@ def train_epoch(model, optimizer, train_triples, n_ent, batch_size, model_name):
         optimizer.step()
 
         if model_name == "TransE":
-            # Re-normalize entity embeddings (TransE constraint)
             with torch.no_grad():
                 model.ent_emb.weight.data = F.normalize(
                     model.ent_emb.weight.data, p=2, dim=1
@@ -194,41 +154,31 @@ def train_epoch(model, optimizer, train_triples, n_ent, batch_size, model_name):
     return total_loss / steps
 
 
-# ── Evaluation ────────────────────────────────────────────────────────────────
 
 def build_filter_set(all_triples):
-    """Set of all known (h, r, t) for filtered ranking."""
     return set(all_triples)
 
 
 def evaluate(model, test_triples, n_ent, filter_set, max_eval=500):
-    """
-    Filtered link prediction evaluation.
-    For each test triple: corrupt tail (or head), rank all entities,
-    filter known true triples, record rank of the true answer.
-    """
     model.eval()
     ranks_head = []
     ranks_tail = []
 
-    eval_triples = test_triples[:max_eval]   # cap for speed on CPU
+    eval_triples = test_triples[:max_eval]   
 
     with torch.no_grad():
         all_ents = torch.arange(n_ent, dtype=torch.long)
 
         for h, r, t in eval_triples:
 
-            # ── Tail prediction ──────────────────────────────────────
             h_rep = torch.full((n_ent,), h, dtype=torch.long)
             r_rep = torch.full((n_ent,), r, dtype=torch.long)
             scores = model.score(h_rep, r_rep, all_ents).numpy()
 
-            # Filter: mask all known true tails except the current one
             for h2, r2, t2 in [(h, r, t2_) for (h2, r2, t2_) in
                                 [(h_, r_, t_) for (h_, r_, t_) in filter_set
                                  if h_ == h and r_ == r and t_ != t]]:
-                scores[h2] = -1e9     # suppress
-            # Actually simpler:
+                scores[h2] = -1e9     
             for (h_, r_, t_) in filter_set:
                 if h_ == h and r_ == r and t_ != t:
                     scores[t_] = -1e9
@@ -236,7 +186,6 @@ def evaluate(model, test_triples, n_ent, filter_set, max_eval=500):
             rank = int((scores > scores[t]).sum()) + 1
             ranks_tail.append(rank)
 
-            # ── Head prediction ──────────────────────────────────────
             t_rep = torch.full((n_ent,), t, dtype=torch.long)
             scores_h = model.score(all_ents, r_rep, t_rep).numpy()
 
@@ -259,25 +208,21 @@ def evaluate(model, test_triples, n_ent, filter_set, max_eval=500):
             "n_eval": len(eval_triples)}
 
 
-# ── Analysis helpers ──────────────────────────────────────────────────────────
 
 def nearest_neighbors(model, id2entity, entity_names, top_k=5):
-    """For selected entities find top-k nearest neighbours by cosine similarity."""
     emb = F.normalize(model.ent_emb.weight.detach(), p=2, dim=1).numpy()
     results = {}
 
     for name in entity_names:
-        # Find the entity ID whose short name matches
         match = [(i, n) for i, n in id2entity.items() if n.lower() == name.lower()]
         if not match:
-            # partial match
             match = [(i, n) for i, n in id2entity.items() if name.lower() in n.lower()]
         if not match:
             results[name] = ["(not found)"]
             continue
         eid, found_name = match[0]
         query = emb[eid]
-        sims = emb @ query   # cosine similarities (vectors already L2-normalised)
+        sims = emb @ query 
         top = np.argsort(-sims)[1:top_k + 1]
         results[found_name] = [(id2entity[i], float(sims[i])) for i in top]
 
@@ -285,24 +230,16 @@ def nearest_neighbors(model, id2entity, entity_names, top_k=5):
 
 
 def relation_behavior(model, id2relation):
-    """
-    Analyse relation embeddings:
-      - Symmetric: r ≈ -r?  (cosine(r, -r) ≈ 1  →  r ≈ 0 vector)
-      - Inverse pairs: cos(r1, r2) ≈ -1?
-      - Composition: cos(r1 + r2, r3) ≈ 1?
-    """
     rel_emb = F.normalize(model.rel_emb.weight.detach(), p=2, dim=1).numpy()
     n_rel = rel_emb.shape[0]
 
     lines = ["=== Relation Behaviour Analysis ===\n"]
 
-    # Symmetric check: ‖r‖ small means r ≈ -r (no directionality)
     norms = np.linalg.norm(model.rel_emb.weight.detach().numpy(), axis=1)
     lines.append("Relation norms (small norm = likely symmetric in TransE):")
     for i, (norm, name) in enumerate(zip(norms, [id2relation[j] for j in range(n_rel)])):
         lines.append(f"  {name:40s}  norm={norm:.4f}")
 
-    # Inverse pairs: cos(r1, r2) closest to -1
     lines.append("\nMost anti-correlated relation pairs (potential inverses):")
     sim_mat = rel_emb @ rel_emb.T
     pairs = []
@@ -313,8 +250,6 @@ def relation_behavior(model, id2relation):
     for sim, i, j in pairs[:5]:
         lines.append(f"  {id2relation[i]:30s} <-> {id2relation[j]:30s}  cos={sim:.4f}")
 
-    # Composition: SWRL Rule 1 analogy
-    # Does vector(studentOf) + vector(studentOf) ≈ vector(intellectualDescendantOf)?
     rel_names = {v: k for k, v in id2relation.items()}
     key_triples = [
         ("studentOf",                 "studentOf",                "intellectualDescendantOf"),
@@ -350,7 +285,6 @@ def relation_behavior(model, id2relation):
 
 
 def tsne_plot(model, id2entity, out_path: Path, max_ents=300):
-    """t-SNE of entity embeddings, coloured by entity type heuristic."""
 
     emb = model.ent_emb.weight.detach().numpy()
     names = [id2entity[i] for i in range(len(id2entity))]
@@ -366,7 +300,6 @@ def tsne_plot(model, id2entity, out_path: Path, max_ents=300):
         if any(x in n for x in ["dynasty", "zhou", "shang"]):      return "Dynasty"
         return "Person/Other"
 
-    # Sample to keep t-SNE fast
     idx = list(range(len(names)))
     if len(idx) > max_ents:
         idx = random.sample(idx, max_ents)
@@ -401,7 +334,6 @@ def tsne_plot(model, id2entity, out_path: Path, max_ents=300):
     print(f"  t-SNE plot saved → {out_path}")
 
 
-# ── Size-sensitivity experiment ───────────────────────────────────────────────
 
 def subsample(triples, n):
     """Return a random subsample of n triples that keeps all entities connected."""
@@ -411,7 +343,6 @@ def subsample(triples, n):
     return triples[:n]
 
 
-# ── Main pipeline ─────────────────────────────────────────────────────────────
 
 def run_model(name, ModelClass, model_kwargs, train_triples, valid_triples, test_triples,
               n_ent, n_rel, filter_set, args, suffix=""):
@@ -441,11 +372,9 @@ def run_model(name, ModelClass, model_kwargs, train_triples, valid_triples, test
                 best_epoch = epoch
                 best_state = {k: v.clone() for k, v in model.state_dict().items()}
 
-    # Restore best
     if best_state:
         model.load_state_dict(best_state)
 
-    # Final evaluation on test set
     test_metrics = evaluate(model, test_triples, n_ent, filter_set)
     print(f"\n  [TEST]  MRR={test_metrics['MRR']:.4f}  "
           f"Hits@1={test_metrics['Hits@1']:.4f}  "
@@ -472,7 +401,6 @@ def main():
     results_dir = Path(args.results_dir)
     results_dir.mkdir(parents=True, exist_ok=True)
 
-    # ── Load data ─────────────────────────────────────────────────────────────
     train, valid, test = load_splits(data_dir)
     id2entity   = load_mappings_raw(data_dir / "entity2id.txt")
     id2relation = load_mappings_raw(data_dir / "relation2id.txt")
@@ -489,7 +417,6 @@ def main():
     distmult_path = results_dir / "model_distmult.pt"
 
     if args.skip_training and transe_path.exists() and distmult_path.exists():
-        # ── Load saved models ─────────────────────────────────────────────────
         print("\nLoading saved models (--skip-training) ...")
         transe = TransE(n_ent, n_rel, args.dim)
         transe.load_state_dict(torch.load(str(transe_path), weights_only=True))
@@ -501,7 +428,6 @@ def main():
         all_results["DistMult_full"] = metrics_distmult
         print("  Models loaded.")
     else:
-        # ── 5.1 Model Comparison: TransE vs DistMult on full dataset ─────────
         transe, metrics_transe = run_model(
             "TransE", TransE, {"margin": 1.0},
             train, valid, test, n_ent, n_rel, filter_set, args,
@@ -516,7 +442,6 @@ def main():
         all_results["DistMult_full"] = metrics_distmult
         torch.save(distmult.state_dict(), str(distmult_path))
 
-        # ── 5.2 Size-sensitivity: 20k ─────────────────────────────────────────
         for size in [20_000]:
             sub   = subsample(list(train), size)
             n_sub = min(size, len(train))
@@ -527,7 +452,6 @@ def main():
             )
             all_results[f"TransE_{n_sub}"] = m
 
-        # ── Comparison table ──────────────────────────────────────────────────
         print("\n" + "=" * 60)
         print("MODEL COMPARISON TABLE")
         print("=" * 60)
@@ -543,13 +467,11 @@ def main():
         print(table)
         (results_dir / "comparison_table.txt").write_text(table, encoding="utf-8")
 
-        # Save JSON metrics
         (results_dir / "metrics_transE.json").write_text(
             json.dumps(metrics_transe, indent=2), encoding="utf-8")
         (results_dir / "metrics_distmult.json").write_text(
             json.dumps(metrics_distmult, indent=2), encoding="utf-8")
 
-    # ── 6.1 Nearest neighbours ────────────────────────────────────────────────
     target_entities = ["BaiQi", "Confucius", "Qin", "Zhao", "studentOf",
                        "Mencius", "Legalism", "Confucianism"]
     nn_results = nearest_neighbors(transe, id2entity, target_entities)
@@ -568,16 +490,13 @@ def main():
     print("\n" + nn_text)
     (results_dir / "nearest_neighbors.txt").write_text(nn_text, encoding="utf-8")
 
-    # ── 6.2 t-SNE ─────────────────────────────────────────────────────────────
     print("\nGenerating t-SNE plot …")
     tsne_plot(transe, id2entity, results_dir / "tsne_plot.png")
 
-    # ── 6.3 Relation behaviour ────────────────────────────────────────────────
     rel_text = relation_behavior(transe, id2relation)
     print("\n" + rel_text)
     (results_dir / "relation_analysis.txt").write_text(rel_text, encoding="utf-8")
 
-    # ── Exercise 8 summary ────────────────────────────────────────────────────
     ex8 = (results_dir / "relation_analysis.txt").read_text(encoding="utf-8")
     ex8_lines = [l for l in ex8.splitlines() if "SWRL" in l or "v(" in l or "cos=" in l]
     ex8_text = "\n".join(ex8_lines)

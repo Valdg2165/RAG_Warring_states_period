@@ -1,11 +1,3 @@
-"""
-Wikipedia crawler for the Warring States period of China.
-- Starts from a set of seed URLs
-- Follows internal Wikipedia links staying within the topic
-- Extracts clean text using trafilatura
-- Saves results to data/crawler_output.jsonl
-"""
-
 import json
 import time
 import re
@@ -15,7 +7,6 @@ from collections import deque
 import requests
 import trafilatura
 
-# ── Configuration ──────────────────────────────────────────────────────────────
 
 SEED_URLS = [
     "https://en.wikipedia.org/wiki/Warring_States_period",
@@ -35,7 +26,6 @@ SEED_URLS = [
     "https://en.wikipedia.org/wiki/Hundred_Schools_of_Thought",
 ]
 
-# Only follow links that match these patterns (keep on-topic)
 TOPIC_PATTERNS = [
     r"/wiki/Warring_States",
     r"/wiki/State_of_",
@@ -66,19 +56,17 @@ TOPIC_PATTERNS = [
 ]
 
 OUTPUT_FILE = "data/crawler_output.jsonl"
-MAX_PAGES = 20          # crawl up to this many pages
-MIN_WORDS = 300         # skip pages shorter than this
-DELAY = 1.0             # seconds between requests (be polite)
+MAX_PAGES = 20          
+MIN_WORDS = 300         
+DELAY = 1.0             
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (compatible; WarringStatesCrawler/1.0; "
                   "educational research project)"
 }
 
-# ── Helpers ────────────────────────────────────────────────────────────────────
 
 def is_valid_wiki_link(href: str) -> bool:
-    """Return True if href is a Wikipedia article link (not a special page)."""
     if not href.startswith("/wiki/"):
         return False
     skip = (
@@ -93,7 +81,6 @@ def is_on_topic(href: str) -> bool:
 
 
 def extract_links(html: str, base_url: str) -> list[str]:
-    """Pull all on-topic Wikipedia article links from raw HTML."""
     links = []
     for match in re.finditer(r'href="(/wiki/[^"#?]+)"', html):
         href = match.group(1)
@@ -102,7 +89,6 @@ def extract_links(html: str, base_url: str) -> list[str]:
     return list(set(links))
 
 
-# Wikipedia footer section headings — everything from these onwards is discarded
 FOOTER_HEADINGS = re.compile(
     r"\n(See also|References|External links|Notes|Further reading|"
     r"Bibliography|Footnotes|Citations|Sources|Works cited)\s*\n",
@@ -111,7 +97,6 @@ FOOTER_HEADINGS = re.compile(
 
 
 def strip_footer(text: str) -> str:
-    """Cut Wikipedia text at the first footer section heading."""
     m = FOOTER_HEADINGS.search(text)
     if m:
         return text[:m.start()].strip()
@@ -119,7 +104,6 @@ def strip_footer(text: str) -> str:
 
 
 def fetch_and_extract(url: str, session: requests.Session) -> dict | None:
-    """Fetch a URL, extract main text, return dict or None if unusable."""
     try:
         resp = session.get(url, headers=HEADERS, timeout=15)
         if resp.status_code != 200:
@@ -134,7 +118,7 @@ def fetch_and_extract(url: str, session: requests.Session) -> dict | None:
     if not text:
         return None
 
-    text = strip_footer(text)   # remove References / External links / etc.
+    text = strip_footer(text)   
 
     word_count = len(text.split())
     if word_count < MIN_WORDS:
@@ -153,7 +137,6 @@ def fetch_and_extract(url: str, session: requests.Session) -> dict | None:
     }
 
 
-# ── Main crawl loop ─────────────────────────────────────────────────────────────
 
 def crawl():
     visited: set[str] = set()
@@ -184,10 +167,8 @@ def crawl():
 
         time.sleep(DELAY)
 
-    # Save output
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         for item in results:
-            # Don't store links_found in the output file (not needed downstream)
             out = {k: v for k, v in item.items() if k != "links_found"}
             f.write(json.dumps(out, ensure_ascii=False) + "\n")
 

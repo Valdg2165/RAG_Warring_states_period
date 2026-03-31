@@ -1,28 +1,3 @@
-"""
-rag_sparql.py  —  RAG with RDF/SPARQL + local Ollama LLM
-=========================================================
-
-Pipeline
---------
-1. Load swrl_inferred.ttl into rdflib
-2. Build a compact schema summary (prefixes, classes, predicates, sample triples)
-3. Baseline  : ask Ollama directly (no KG) → answer from LLM's own knowledge
-4. RAG       : NL -> SPARQL (via LLM) -> execute on rdflib -> format answer
-5. Self-repair: if SPARQL fails or returns 0 rows, ask LLM to fix it (up to 2 retries)
-6. Evaluation: run 7 pre-defined questions, compare Baseline vs RAG
-
-Usage
------
-Interactive CLI:
-    python src/rag/rag_sparql.py
-
-Automated evaluation only:
-    python src/rag/rag_sparql.py --eval
-
-Choose model:
-    python src/rag/rag_sparql.py --model tinyllama
-"""
-
 import argparse
 import json
 import re
@@ -33,7 +8,6 @@ from pathlib import Path
 import requests
 from rdflib import Graph
 
-# ── Configuration ─────────────────────────────────────────────────────────────
 
 OLLAMA_URL   = "http://localhost:11434/api/generate"
 DEFAULT_MODEL = "gemma:2b"
@@ -48,7 +22,6 @@ MAX_RESULT_ROWS     = 20
 WS_ONTO = "http://warring-states.kg/ontology#"
 WS_INST = "http://warring-states.kg/instance/"
 
-# ── 7 evaluation questions (Warring States domain) ───────────────────────────
 
 EVAL_QUESTIONS = [
     {
@@ -88,7 +61,6 @@ EVAL_QUESTIONS = [
     },
 ]
 
-# ── Utility: call Ollama ──────────────────────────────────────────────────────
 
 def ask_llm(prompt: str, model: str) -> str:
     try:
@@ -105,7 +77,6 @@ def ask_llm(prompt: str, model: str) -> str:
         return f"[ERROR] {e}"
 
 
-# ── Step 1: Load KG ───────────────────────────────────────────────────────────
 
 def load_graph(path: Path) -> Graph:
     g = Graph()
@@ -113,15 +84,12 @@ def load_graph(path: Path) -> Graph:
     return g
 
 
-# ── Step 2: Schema summary ────────────────────────────────────────────────────
 
 def build_schema_summary(g: Graph) -> str:
-    # Prefixes
     ns_lines = []
     for prefix, ns in g.namespace_manager.namespaces():
         ns_lines.append(f"PREFIX {prefix}: <{ns}>")
 
-    # Classes
     class_q = """
         SELECT DISTINCT ?cls (COUNT(?s) AS ?cnt) WHERE {
             ?s a ?cls .
@@ -145,7 +113,6 @@ def build_schema_summary(g: Graph) -> str:
         short = str(row.p).split("#")[-1]
         preds.append(f"  ws:{short}  ({row.cnt})")
 
-    # Sample triples (non-trivial relations)
     sample_q = f"""
         SELECT ?s ?p ?o WHERE {{
             ?s ?p ?o .
@@ -188,7 +155,6 @@ PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
     return summary.strip()
 
 
-# ── Step 3: Baseline (no KG) ─────────────────────────────────────────────────
 
 BASELINE_PROMPT = """Answer the following question about the Warring States period of ancient China.
 Give a direct, factual answer in 2-4 sentences.
@@ -200,7 +166,6 @@ def answer_baseline(question: str, model: str) -> str:
     return ask_llm(BASELINE_PROMPT.format(question=question), model)
 
 
-# ── Step 4: SPARQL generation ─────────────────────────────────────────────────
 
 SPARQL_SYSTEM = """You generate SPARQL queries for a Warring States China RDF graph.
 
@@ -377,7 +342,6 @@ Write the corrected query:
 
 CODE_BLOCK_RE = re.compile(r"```(?:sparql)?\s*(.*?)```", re.IGNORECASE | re.DOTALL)
 
-# Wrong-prefix fixes — ordered most-specific first
 _PREFIX_FIXES = [
     (re.compile(r"\bwdfs:"),          "rdfs:"),  # wdfs: → rdfs:
     (re.compile(r"\bw:label\b"),      "rdfs:label"),
@@ -394,18 +358,13 @@ _PREFIX_FIXES = [
 ]
 
 def _clean_sparql(sparql: str) -> str:
-    """Strip chat-template tokens and fix common wrong prefixes."""
-    # Cut off at any HTML/XML tag the model appended (e.g. </start_of_turn>)
     sparql = re.split(r"</", sparql)[0]
-    # Trim to last closing brace (drop explanation text after the query)
     last_brace = sparql.rfind("}")
     if last_brace != -1:
         tail = sparql[last_brace:]
         limit_m = re.search(r"\}\s*(LIMIT\s+\d+)?", tail)
         sparql = sparql[:last_brace] + (limit_m.group(0) if limit_m else "}")
-    # Fix "? VarName" spaces in variable names
     sparql = re.sub(r"\?\s+([A-Za-z])", r"?\1", sparql)
-    # Fix prefixes
     for pat, repl in _PREFIX_FIXES:
         sparql = pat.sub(repl, sparql)
     return sparql.strip()
@@ -414,7 +373,6 @@ def _clean_sparql(sparql: str) -> str:
 def extract_sparql(text: str) -> str:
     m = CODE_BLOCK_RE.search(text)
     raw = m.group(1).strip() if m else text.strip()
-    # Prompt ended with ```sparql — strip trailing fence if present
     raw = re.sub(r"```\s*$", "", raw)
     raw = re.sub(r"^```\w*\s*", "", raw)
     return _clean_sparql(raw)
@@ -427,7 +385,6 @@ def run_sparql(g: Graph, query: str):
     return vars_, rows
 
 
-# ── Step 4b: Synthesise a natural-language answer from SPARQL rows ────────────
 
 SYNTHESIS_PROMPT = """Turn these facts into one sentence. Do NOT say "I cannot" or "context". Just state the facts.
 
@@ -443,7 +400,6 @@ _REFUSAL_PHRASES = [
 ]
 
 def _fmt_values(values: list) -> str:
-    """Format a list of values into natural English."""
     if len(values) == 1:
         return values[0]
     if len(values) <= 5:
@@ -455,7 +411,6 @@ def _fmt_values(values: list) -> str:
 def synthesize_answer(question: str, vars_: list, rows: list, model: str) -> str:
     if not rows:
         return "(no results from knowledge graph)"
-    # Flatten rows to readable names, skip bare Q-codes
     values = []
     for row in rows[:20]:
         for c in row:
@@ -464,7 +419,7 @@ def synthesize_answer(question: str, vars_: list, rows: list, model: str) -> str
             if re.match(r"^Q\d+$", c):
                 continue
             values.append(c)
-    values = list(dict.fromkeys(values))  # deduplicate
+    values = list(dict.fromkeys(values))  
     if not values:
         return "(results contained only unresolved identifiers)"
 
@@ -472,22 +427,13 @@ def synthesize_answer(question: str, vars_: list, rows: list, model: str) -> str
     prompt = SYNTHESIS_PROMPT.format(question=question, results=result_str)
     nl = ask_llm(prompt, model)
 
-    # If the model refuses, fall back to a clean template sentence
     if any(p in nl.lower() for p in _REFUSAL_PHRASES):
         nl = f"{result_str}."
     return nl
 
 
-# ── Step 5: RAG with self-repair ──────────────────────────────────────────────
 
 def answer_rag(question: str, g: Graph, schema: str, model: str) -> dict:
-    """
-    Full RAG pipeline:
-      1. Generate SPARQL from NL
-      2. Execute — if fails, repair up to MAX_REPAIR_ATTEMPTS times
-      3. Synthesise a natural-language sentence from the rows
-      4. Return structured result
-    """
     sparql = extract_sparql(ask_llm(make_sparql_prompt(schema, question), model))
     attempt = 1
     repaired = False
@@ -520,7 +466,6 @@ def answer_rag(question: str, g: Graph, schema: str, model: str) -> dict:
                 }
             error_hint = last_error
 
-        # Repair
         sparql   = extract_sparql(ask_llm(make_repair_prompt(schema, question, sparql, error_hint), model))
         repaired = True
         attempt += 1
@@ -529,7 +474,6 @@ def answer_rag(question: str, g: Graph, schema: str, model: str) -> dict:
             "repaired": True, "error": last_error, "attempts": attempt}
 
 
-# ── Step 6: Format and display ────────────────────────────────────────────────
 
 def fmt_rows(vars_: list, rows: list) -> str:
     if not rows:
@@ -538,7 +482,6 @@ def fmt_rows(vars_: list, rows: list) -> str:
     sep    = "-" * len(header)
     lines  = [header, sep]
     for row in rows[:MAX_RESULT_ROWS]:
-        # Shorten URIs to local names
         cells = []
         for c in row:
             if c.startswith("http"):
@@ -570,7 +513,6 @@ def print_comparison(question: str, baseline: str, rag: dict):
         print(f"\n  SPARQL used:\n{textwrap.indent(rag['sparql'], '    ')}")
 
 
-# ── Evaluation suite ──────────────────────────────────────────────────────────
 
 def run_evaluation(g: Graph, schema: str, model: str) -> list:
     print("\n" + "=" * 70)
@@ -585,7 +527,6 @@ def run_evaluation(g: Graph, schema: str, model: str) -> list:
         print_comparison(q["question"], baseline, rag)
 
         rag_answer = rag.get("nl_answer", "(no results)")
-        # Also check raw row values in case synthesis paraphrases away the keyword
         raw_rows_str = fmt_rows(rag["vars"], rag["rows"]) if rag["rows"] else ""
         kw = q["expected_keyword"].lower()
         correct_rag      = (kw in rag_answer.lower() or kw in raw_rows_str.lower()) if rag["rows"] else False
@@ -604,7 +545,6 @@ def run_evaluation(g: Graph, schema: str, model: str) -> list:
             "sparql":           rag["sparql"],
         })
 
-    # Summary table
     print("\n\n" + "=" * 70)
     print("EVALUATION SUMMARY TABLE")
     print("=" * 70)
@@ -624,7 +564,6 @@ def run_evaluation(g: Graph, schema: str, model: str) -> list:
     return records
 
 
-# ── CLI ───────────────────────────────────────────────────────────────────────
 
 def interactive_loop(g: Graph, schema: str, model: str):
     print("\n" + "=" * 70)

@@ -1,36 +1,6 @@
-"""
-SWRL Reasoning on the Warring States Knowledge Graph
-=====================================================
-
-We build a proper OWL ontology in-memory with OWLReady2,
-populate it with key Warring States individuals, define
-4 SWRL Horn rules, run HermiT/Pellet, and report what
-the reasoner infers.
-
-4 Rules
--------
-Rule 1 (intellectualLineage):
-  Person(?p) ^ studentOf(?p, ?t) ^ studentOf(?t, ?gm)
-  -> intellectualDescendantOf(?p, ?gm)
-
-Rule 2 (militaryService):
-  Person(?p) ^ servedIn(?p, ?s) ^ attacked(?s, ?e)
-  -> foughtAgainst(?p, ?e)
-
-Rule 3 (schoolAffiliation):
-  Person(?p) ^ studentOf(?p, ?t) ^ movement(?t, ?school)
-  -> affiliatedWith(?p, ?school)
-
-Rule 4 (elderScholar):
-  Person(?p) ^ birthYear(?p, ?by) ^ deathYear(?p, ?dy)
-  ^ swrlb:subtract(?age, ?dy, ?by) ^ swrlb:greaterThan(?age, 70)
-  -> ElderScholar(?p)
-"""
-
 import sys
 import io
 
-# Fix Windows cp1252 console encoding
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 
 from owlready2 import (
@@ -41,13 +11,11 @@ from owlready2.rule import (
     BuiltinAtom, ClassAtom, DatavaluedPropertyAtom,
 )
 
-# ── 1. Build Warring States OWL ontology in-memory ────────────────────────────
 
 onto = get_ontology("http://warring-states.kg/swrl#")
 
 with onto:
 
-    # --- Classes ---
     class Person(Thing):             pass
     class State(Thing):              pass
     class PhilosophicalSchool(Thing): pass
@@ -83,18 +51,13 @@ with onto:
         domain, range = [Person], [int]
 
 
-# ── 2. Populate with Warring States individuals ────────────────────────────────
-# Data sourced from our KG (warring_states_expanded.ttl + Wikidata enrichment)
-
 with onto:
 
-    # Philosophical schools
     Confucianism    = PhilosophicalSchool("Confucianism")
     Legalism        = PhilosophicalSchool("Legalism")
     Taoism          = PhilosophicalSchool("Taoism")
     Mohism          = PhilosophicalSchool("Mohism")
 
-    # States (with attack relationships from our KG)
     Qin  = State("Qin");   Zhao = State("Zhao"); Wei  = State("Wei")
     Han  = State("Han");   Chu  = State("Chu");  Qi   = State("Qi")
     Yan  = State("Yan");   Lu   = State("Lu")
@@ -103,14 +66,11 @@ with onto:
     Wei.attacked  = [Han]
     Chu.attacked  = [Wei]
 
-    # Persons — birthYear/deathYear use negative integers for BC
-    # (age = deathYear - birthYear gives correct positive span)
-
     Confucius = Person("Confucius")
     Confucius.birthYear = -551; Confucius.deathYear = -479
     Confucius.movement  = [Confucianism]
 
-    Zisi = Person("Zisi")           # grandson of Confucius
+    Zisi = Person("Zisi")           
     Zisi.birthYear = -481; Zisi.deathYear = -402
     Zisi.studentOf = [Confucius]
 
@@ -163,17 +123,12 @@ with onto:
     GuanZhong.birthYear = -720; GuanZhong.deathYear = -645
 
 
-# ── 3. Define SWRL Rules ───────────────────────────────────────────────────────
 
 print("=" * 60)
 print("Warring States SWRL Rules (OWLReady2)")
 print("=" * 60)
 
 with onto:
-
-    # --- Rule 1: intellectual lineage (studentOf chain) ---
-    # Person(?p) ^ studentOf(?p,?t) ^ studentOf(?t,?gm)
-    #   -> intellectualDescendantOf(?p, ?gm)
     r1 = Imp()
     r1.label = ["intellectualLineage"]
     r1.set_as_rule(
@@ -183,9 +138,6 @@ with onto:
     print("\nRule 1 defined: Person(?p) ^ studentOf(?p,?t) ^ studentOf(?t,?gm)")
     print("             -> intellectualDescendantOf(?p, ?gm)")
 
-    # --- Rule 2: military service -> foughtAgainst ---
-    # Person(?p) ^ servedIn(?p,?s) ^ attacked(?s,?e)
-    #   -> foughtAgainst(?p, ?e)
     r2 = Imp()
     r2.label = ["militaryService"]
     r2.set_as_rule(
@@ -195,9 +147,7 @@ with onto:
     print("\nRule 2 defined: Person(?p) ^ servedIn(?p,?s) ^ attacked(?s,?e)")
     print("             -> foughtAgainst(?p, ?e)")
 
-    # --- Rule 3: school affiliation via teacher's movement ---
-    # Person(?p) ^ studentOf(?p,?t) ^ movement(?t,?school)
-    #   -> affiliatedWith(?p, ?school)
+
     r3 = Imp()
     r3.label = ["schoolAffiliation"]
     r3.set_as_rule(
@@ -207,10 +157,7 @@ with onto:
     print("\nRule 3 defined: Person(?p) ^ studentOf(?p,?t) ^ movement(?t,?school)")
     print("             -> affiliatedWith(?p, ?school)")
 
-    # --- Rule 4: ElderScholar (lived > 70 years) ---
-    # Person(?p) ^ birthYear(?p,?by) ^ deathYear(?p,?dy)
-    # ^ swrlb:subtract(?age,?dy,?by) ^ swrlb:greaterThan(?age,70)
-    #   -> ElderScholar(?p)
+
     r4 = Imp()
     r4.label = ["elderScholar"]
     var_p   = r4.get_variable("p")
@@ -239,7 +186,6 @@ with onto:
     print("             -> ElderScholar(?p)")
 
 
-# ── 4. Run Reasoner ────────────────────────────────────────────────────────────
 
 print()
 print("=" * 60)
@@ -272,19 +218,16 @@ if not reasoner_ok:
             print("  Falling back to manual rule application below.")
 
 
-# ── 5. Report Inferred Facts ───────────────────────────────────────────────────
 
 print()
 print("=" * 60)
 print("Inferred Facts")
 print("=" * 60)
 
-# Helper: safe name from OWLReady2 individual
 def name(ind):
     return ind.name if hasattr(ind, "name") else str(ind)
 
 
-# -- Rule 1 results: intellectualDescendantOf
 print("\nRule 1 -- intellectualDescendantOf (studentOf chain):")
 print("-" * 50)
 found = []
@@ -297,7 +240,6 @@ if found:
     for p, gm in sorted(found):
         print(f"  {p:15s} intellectualDescendantOf  {gm}")
 else:
-    # Manual fallback
     print("  (Reasoner did not materialise; applying manually)")
     persons = list(onto.individuals())
     for ind in persons:
@@ -312,7 +254,6 @@ if not found:
 print(f"  => {len(found)} entailment(s)")
 
 
-# -- Rule 2 results: foughtAgainst
 print("\nRule 2 -- foughtAgainst (servedIn + attacked):")
 print("-" * 50)
 found2 = []
@@ -337,7 +278,6 @@ if not found2:
 print(f"  => {len(found2)} entailment(s)")
 
 
-# -- Rule 3 results: affiliatedWith
 print("\nRule 3 -- affiliatedWith (teacher's philosophical school):")
 print("-" * 50)
 found3 = []
@@ -361,7 +301,6 @@ if not found3:
 print(f"  => {len(found3)} entailment(s)")
 
 
-# -- Rule 4 results: ElderScholar
 print("\nRule 4 -- ElderScholar (lived more than 70 years):")
 print("-" * 50)
 found4 = []
@@ -390,7 +329,6 @@ if not found4:
 print(f"  => {len(found4)} entailment(s)")
 
 
-# ── 6. Summary ────────────────────────────────────────────────────────────────
 
 print()
 print("=" * 60)
@@ -409,7 +347,6 @@ print("      Rule 4 uses swrlb:subtract/greaterThan (Pellet required).")
 print("      Manual fallback applied when reasoner does not materialise.")
 
 
-# ── 7. Apply rules as SPARQL CONSTRUCT on the real KG → save for RAG ──────────
 
 print()
 print("=" * 60)
@@ -427,7 +364,6 @@ WSI = Namespace("http://warring-states.kg/instance/")
 TTL_PATH = Path("kg_artifacts/warring_states_final.ttl")
 OUT_PATH = Path("kg_artifacts/swrl_inferred.ttl")
 
-# SPARQL CONSTRUCT equivalents of the four SWRL rules
 SPARQL_R1 = """
 PREFIX ws: <http://warring-states.kg/ontology#>
 CONSTRUCT { ?p ws:intellectualDescendantOf ?gm }
@@ -457,7 +393,6 @@ WHERE {
 }
 """
 
-# Rule 4 equivalent: wasConqueredBy → atWarWith (symmetric)
 SPARQL_R4 = """
 PREFIX ws: <http://warring-states.kg/ontology#>
 CONSTRUCT {
@@ -491,7 +426,6 @@ if TTL_PATH.exists():
 
     print(f"\n  Total inferred on real KG : {len(inferred):3d} triples")
 
-    # Sample output
     print("\nSample inferred triples:")
     for i, (s, p, o) in enumerate(inferred):
         s_ = str(s).split("/")[-1]
@@ -502,7 +436,6 @@ if TTL_PATH.exists():
             print(f"  … ({len(inferred)} total)")
             break
 
-    # Save enriched graph (original + inferred)
     enriched = Graph()
     enriched += kg
     enriched += inferred
@@ -514,7 +447,6 @@ else:
     print("  Run build_kg.py and wikidata_enrichment.py first.")
 
 
-# ── 8. Exercise 8 — Rule-based vs KGE comparison ──────────────────────────────
 
 print()
 print("=" * 60)

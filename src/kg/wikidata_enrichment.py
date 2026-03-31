@@ -1,16 +1,9 @@
-"""
-Wikidata enrichment for the Warring States KG.
-Uses verified QIDs and working SPARQL queries.
-
-Output: kg_artifacts/warring_states_expanded.ttl
-"""
 
 import re
 import time
 import requests
 from rdflib import Graph, Namespace, URIRef, Literal, RDF, RDFS, OWL, XSD
 
-# ── Namespaces ─────────────────────────────────────────────────────────────────
 WS   = Namespace("http://warring-states.kg/ontology#")
 WSI  = Namespace("http://warring-states.kg/instance/")
 PROV = Namespace("http://www.w3.org/ns/prov#")
@@ -20,15 +13,6 @@ HEADERS = {"User-Agent": "WarringStatesKG/1.0 (educational; contact: student@esi
 
 
 def _parse_year(date_str: str) -> str:
-    """
-    Extract the year from a Wikidata ISO 8601 date string.
-
-    Wikidata returns BC dates as "-YYYY-MM-DDT..." (minus sign + 4-digit year).
-    The old [:4] slice cut the last digit for negative years:
-        "-0389-01-01T..." [:4] → "-038"  ← WRONG (Shang Yang 390 BC)
-    Correct slice for BC  : [:5]  → "-0389"
-    Correct slice for AD  : [:4]  → "0551"
-    """
     if not date_str:
         return ""
     if date_str.startswith("-"):
@@ -38,7 +22,6 @@ def _parse_year(date_str: str) -> str:
 KG_FILE       = "kg_artifacts/warring_states.ttl"
 EXPANDED_FILE = "kg_artifacts/warring_states_expanded.ttl"
 
-# ── Verified QIDs ──────────────────────────────────────────────────────────────
 PERSON_QIDS = {
     "Confucius":    "Q4604",
     "Mencius":      "Q188903",
@@ -72,7 +55,6 @@ BATTLE_QIDS = {
     "Battle of Maling":    "Q2005185",
 }
 
-# QIDs for all 7 main warring states (found via Wikidata search)
 STATE_QIDS = {
     "Qin":  "Q207788",   # State of Qin
     "Chu":  "Q163354",   # State of Chu
@@ -91,7 +73,6 @@ STATE_QIDS = {
 WARRING_STATES_QID = "Q185063"
 
 
-# ── Helpers ────────────────────────────────────────────────────────────────────
 
 def sparql_query(query: str) -> list[dict]:
     try:
@@ -139,7 +120,6 @@ def add_triple(g: Graph, s_label: str, pred: URIRef,
     return False
 
 
-# ── Ontology properties to add ────────────────────────────────────────────────
 NEW_PROPS = [
     (WS.hasCapital,       "has capital"),
     (WS.locatedIn,        "located in"),
@@ -172,7 +152,6 @@ NEW_PROPS = [
 ]
 
 
-# ── Queries ────────────────────────────────────────────────────────────────────
 
 def fetch_person_details(qids_dict: dict) -> list[dict]:
     """Birth/death, teacher, influenced-by for known persons."""
@@ -195,7 +174,6 @@ def fetch_person_details(qids_dict: dict) -> list[dict]:
 
 
 def fetch_state_details(qids_dict: dict) -> list[dict]:
-    """Capital, head of state, inception, dissolution for states."""
     values = " ".join(f"wd:{q}" for q in qids_dict.values())
     q = f"""
     SELECT DISTINCT ?state ?stateLabel ?capital ?capitalLabel
@@ -215,7 +193,6 @@ def fetch_state_details(qids_dict: dict) -> list[dict]:
 
 
 def fetch_battle_details(qids_dict: dict) -> list[dict]:
-    """Participants, winner, date, location for battles."""
     values = " ".join(f"wd:{q}" for q in qids_dict.values())
     q = f"""
     SELECT DISTINCT ?battle ?battleLabel ?participant ?participantLabel
@@ -232,7 +209,6 @@ def fetch_battle_details(qids_dict: dict) -> list[dict]:
 
 
 def fetch_warring_states_people() -> list[dict]:
-    """Persons active during the Warring States period via conflict or birth era."""
     q = f"""
     SELECT DISTINCT ?person ?personLabel ?birth ?death ?role ?roleLabel WHERE {{
       ?person wdt:P31 wd:Q5 .
@@ -250,7 +226,6 @@ def fetch_warring_states_people() -> list[dict]:
 
 
 def fetch_philosophical_network() -> list[dict]:
-    """All teacher-student and influenced-by relations for Warring States philosophers."""
     q = f"""
     SELECT DISTINCT ?person ?personLabel ?teacher ?teacherLabel ?inf ?infLabel WHERE {{
       ?person wdt:P31 wd:Q5 .
@@ -267,7 +242,6 @@ def fetch_philosophical_network() -> list[dict]:
 
 
 def fetch_battles_of_period() -> list[dict]:
-    """All battles linked to the Warring States period."""
     q = f"""
     SELECT DISTINCT ?battle ?battleLabel ?participant ?participantLabel
                     ?winner ?winnerLabel ?date ?location ?locationLabel WHERE {{
@@ -285,7 +259,6 @@ def fetch_battles_of_period() -> list[dict]:
 
 
 def fetch_state_battles() -> list[dict]:
-    """Battles in which any of our known states participated."""
     values = " ".join(f"wd:{q}" for q in STATE_QIDS.values())
     q = f"""
     SELECT DISTINCT ?battle ?battleLabel ?participant ?participantLabel
@@ -303,7 +276,6 @@ def fetch_state_battles() -> list[dict]:
 
 
 def fetch_notable_works() -> list[dict]:
-    """Notable works (books) authored by key figures."""
     values = " ".join(f"wd:{q}" for q in {**PERSON_QIDS}.values())
     q = f"""
     SELECT DISTINCT ?author ?authorLabel ?work ?workLabel WHERE {{
@@ -316,7 +288,6 @@ def fetch_notable_works() -> list[dict]:
     return sparql_query(q)
 
 
-# ── Main ───────────────────────────────────────────────────────────────────────
 
 def run():
     g = Graph()
@@ -325,20 +296,17 @@ def run():
     before = len(g)
     print(f"Loaded KG: {before:,} triples\n")
 
-    # Register new ontology properties
     for prop, label in NEW_PROPS:
         g.add((prop, RDF.type, OWL.ObjectProperty))
         g.add((prop, RDFS.label, Literal(label)))
 
-    # QID → label lookup (reverse)
     qid_to_label = {}
     for d in [PERSON_QIDS, STATE_QIDS, BATTLE_QIDS, SCHOOL_QIDS]:
         for lbl, qid in d.items():
             qid_to_label[f"http://www.wikidata.org/entity/{qid}"] = lbl
 
-    n = 0  # new triple counter
+    n = 0 
 
-    # ── 1. Person details ─────────────────────────────────────────────────────
     print("[1/6] Person birth/death/teacher/influenced...")
     rows = fetch_person_details(PERSON_QIDS)
     for row in rows:
@@ -378,7 +346,6 @@ def run():
     print(f"  +{n} (total so far)")
     time.sleep(1)
 
-    # ── 2. State details ──────────────────────────────────────────────────────
     print("[2/6] State capitals, rulers, dates...")
     prev = n
     rows = fetch_state_details(STATE_QIDS)
@@ -419,7 +386,6 @@ def run():
     print(f"  +{n - prev} (total {n})")
     time.sleep(1)
 
-    # ── 3. Battle details (specific) ─────────────────────────────────────────
     print("[3/6] Battle participants & outcomes (known battles)...")
     prev = n
     rows = fetch_battle_details(BATTLE_QIDS)
@@ -447,7 +413,6 @@ def run():
     print(f"  +{n - prev} (total {n})")
     time.sleep(1)
 
-    # ── 4. All battles involving our states ───────────────────────────────────
     print("[4/6] All battles involving known states...")
     prev = n
     rows = fetch_state_battles()
@@ -471,7 +436,6 @@ def run():
     print(f"  +{n - prev} (total {n})")
     time.sleep(1)
 
-    # ── 5. Philosophical network (all ~500 BC – 200 BC philosophers) ──────────
     print("[5/6] Philosophical teacher/influence network...")
     prev = n
     rows = fetch_philosophical_network()
@@ -488,7 +452,6 @@ def run():
     print(f"  +{n - prev} (total {n})")
     time.sleep(1)
 
-    # ── 6. Notable works ──────────────────────────────────────────────────────
     print("[6/6] Notable works authored by key figures...")
     prev = n
     rows = fetch_notable_works()
@@ -500,7 +463,6 @@ def run():
             n += add_triple(g, a_lbl, WS.authored, w_lbl, s_cls=WS.Person)
     print(f"  +{n - prev} (total {n})")
 
-    # ── Save ──────────────────────────────────────────────────────────────────
     after = len(g)
     g.serialize(destination=EXPANDED_FILE, format="turtle")
     print(f"\nExpanded KG saved -> {EXPANDED_FILE}")

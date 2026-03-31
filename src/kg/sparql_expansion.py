@@ -1,33 +1,3 @@
-"""
-SPARQL Expansion for the Warring States KG.
-
-What is SPARQL expansion?
---------------------------
-We already have a local RDF graph. "Expansion" means we use SPARQL queries —
-either against our OWN graph (rule-based inference) or against WIKIDATA — to
-discover new triples that logically follow from what we already know, and add
-them back in. Two strategies:
-
-  A) LOCAL INFERENCE RULES (SPARQL on our own graph)
-     These are cheap and deterministic. Examples:
-       - Inverse:    A conquered B  →  B wasConqueredBy A
-       - Inverse:    A studentOf B  →  B hasStudent A
-       - Symmetric:  A coOccursWith B  →  B coOccursWith A (already implicit)
-       - Transitive: A studentOf B, B studentOf C  →  A intellectualDescendantOf C
-       - Chain:      A servedIn S, S attacked T  →  A foughtFor S against T
-
-  B) WIKIDATA 1-HOP EXPANSION (SPARQL on external endpoint)
-     For each entity already in our KG, fetch their immediate Wikidata
-     neighbours that we haven't pulled yet: colleagues, employers, works,
-     battles, movements, etc.
-
-Goal: push total triples from ~28k toward 50k–100k for KGE training.
-
-Input:  kg_artifacts/warring_states_expanded.ttl
-Output: kg_artifacts/warring_states_final.ttl
-        kg_artifacts/kb_stats_final.txt
-"""
-
 import re
 import time
 import requests
@@ -36,17 +6,12 @@ from rdflib import Graph, Namespace, URIRef, Literal, RDF, RDFS, OWL, XSD
 
 
 def _parse_year(date_str: str) -> str:
-    """Extract year from Wikidata ISO 8601 date string.
-    BC dates: '-YYYY-MM-DD...' → take [:5] to get '-YYYY' (not [:4] which loses last digit).
-    AD dates: 'YYYY-MM-DD...' → take [:4].
-    """
     if not date_str:
         return ""
     if date_str.startswith("-"):
         return date_str[:5]
     return date_str[:4]
 
-# ── Namespaces ─────────────────────────────────────────────────────────────────
 WS   = Namespace("http://warring-states.kg/ontology#")
 WSI  = Namespace("http://warring-states.kg/instance/")
 PROV = Namespace("http://www.w3.org/ns/prov#")
@@ -58,8 +23,6 @@ INPUT_FILE  = "kg_artifacts/warring_states_expanded.ttl"
 OUTPUT_FILE = "kg_artifacts/warring_states_final.ttl"
 STATS_FILE  = "kg_artifacts/kb_stats_final.txt"
 
-# ── Inverse property definitions ───────────────────────────────────────────────
-# (forward_property, inverse_property, inverse_label)
 INVERSE_PAIRS = [
     (WS.conquered,      WS.wasConqueredBy,      "was conquered by"),
     (WS.attacked,       WS.wasAttackedBy,        "was attacked by"),
@@ -98,11 +61,7 @@ INVERSE_PAIRS = [
     (WS.heldPosition,   WS.positionHeldBy,       "position held by"),
 ]
 
-# ── Transitivity / chain rules (SPARQL on local graph) ────────────────────────
-# Each rule is a (rule_name, sparql_template, new_predicate)
-# The SPARQL SELECT must return ?s and ?o
 CHAIN_RULES = [
-    # intellectual lineage: if A studentOf B and B studentOf C → A intellectualDescendantOf C
     (
         "intellectual_lineage",
         """
@@ -115,7 +74,6 @@ CHAIN_RULES = [
         WS.intellectualDescendantOf,
         "intellectual descendant of",
     ),
-    # if A influenced B and B influenced C → A remotelyInfluenced C
     (
         "transitive_influence",
         """
@@ -128,7 +86,6 @@ CHAIN_RULES = [
         WS.remotelyInfluenced,
         "remotely influenced",
     ),
-    # if Person servedIn State and State attacked State2 → Person foughtAgainst State2
     (
         "person_fought_against",
         """
@@ -141,7 +98,6 @@ CHAIN_RULES = [
         WS.foughtAgainst,
         "fought against",
     ),
-    # if Person servedIn State and State conquered State2 → Person conqueredFor State2
     (
         "person_conquered_for",
         """
@@ -154,7 +110,6 @@ CHAIN_RULES = [
         WS.participatedInConquestOf,
         "participated in conquest of",
     ),
-    # if Person A and B both servedIn same State → they were colleagues
     (
         "colleagues",
         """
@@ -169,7 +124,6 @@ CHAIN_RULES = [
         WS.colleague,
         "colleague of",
     ),
-    # if A studentOf B and B memberOf School → A also affiliated with that School
     (
         "school_affiliation",
         """
@@ -182,7 +136,6 @@ CHAIN_RULES = [
         WS.affiliatedWith,
         "affiliated with",
     ),
-    # if Battle hasParticipant State and State headOfState Person → Person foughtIn Battle
     (
         "leader_fought_in",
         """
@@ -195,7 +148,6 @@ CHAIN_RULES = [
         WS.ledIn,
         "led forces in",
     ),
-    # coOccursWith is symmetric — generate reverse direction
     (
         "cooccurs_symmetric",
         """
@@ -210,8 +162,6 @@ CHAIN_RULES = [
     ),
 ]
 
-
-# ── Wikidata 1-hop expansion ───────────────────────────────────────────────────
 
 def sparql_wd(query: str) -> list[dict]:
     try:
@@ -259,10 +209,6 @@ def wd_add(g: Graph, s_lbl: str, pred: URIRef, o_lbl: str,
 
 
 def wikidata_expand_philosophers(g: Graph) -> int:
-    """
-    For each philosopher born 600–200 BC, fetch:
-    students, teachers, influenced, movement, employer.
-    """
     n = 0
     query = """
     SELECT DISTINCT ?p ?pLabel ?rel ?relLabel ?target ?targetLabel WHERE {
@@ -309,7 +255,6 @@ def wikidata_expand_philosophers(g: Graph) -> int:
 
 
 def wikidata_expand_battles(g: Graph) -> int:
-    """Fetch all battles with Chinese participants, 600–200 BC."""
     n = 0
     query = """
     SELECT DISTINCT ?battle ?battleLabel ?participant ?participantLabel
@@ -349,9 +294,7 @@ def wikidata_expand_battles(g: Graph) -> int:
 
 
 def wikidata_expand_chinese_states(g: Graph) -> int:
-    """For known Chinese states, fetch rulers, battles, capitals, successors."""
     n = 0
-    # States during Spring & Autumn / Warring States ~ 770–221 BC
     query = """
     SELECT DISTINCT ?state ?stateLabel ?rel ?relLabel ?val ?valLabel WHERE {
       ?state wdt:P31/wdt:P279* wd:Q3624078 .
@@ -392,7 +335,6 @@ def wikidata_expand_chinese_states(g: Graph) -> int:
 
 
 def wikidata_expand_works(g: Graph) -> int:
-    """Fetch all texts / books written during or about the Warring States period."""
     n = 0
     query = """
     SELECT DISTINCT ?work ?workLabel ?author ?authorLabel ?genre ?genreLabel WHERE {
@@ -420,11 +362,7 @@ def wikidata_expand_works(g: Graph) -> int:
     return n
 
 
-# ── Part A: local SPARQL inference ────────────────────────────────────────────
-
 def apply_inverse_rules(g: Graph) -> int:
-    """Generate all inverse-property triples from INVERSE_PAIRS."""
-    # First register all inverse properties in the ontology
     for fwd, inv, label in INVERSE_PAIRS:
         g.add((inv, RDF.type, OWL.ObjectProperty))
         g.add((inv, RDFS.label, Literal(label)))
@@ -446,13 +384,11 @@ def apply_inverse_rules(g: Graph) -> int:
 
 
 def apply_chain_rules(g: Graph) -> int:
-    """Run each SPARQL chain rule against our local graph."""
     n = 0
     PROV_CHAIN = URIRef("http://warring-states.kg/inference#chainRule")
     for rule_name, sparql_body, new_pred, label in CHAIN_RULES:
         g.add((new_pred, RDF.type, OWL.ObjectProperty))
         g.add((new_pred, RDFS.label, Literal(label)))
-        # Inject our prefix into the query
         query = (
             "PREFIX ws:  <http://warring-states.kg/ontology#>\n"
             "PREFIX wsi: <http://warring-states.kg/instance/>\n"
@@ -475,7 +411,6 @@ def apply_chain_rules(g: Graph) -> int:
     return n
 
 
-# ── Main ───────────────────────────────────────────────────────────────────────
 
 def run():
     g = Graph()
@@ -486,7 +421,6 @@ def run():
 
     total_new = 0
 
-    # ── Part A: Local inference ───────────────────────────────────────────────
     print("=" * 55)
     print("PART A — Local SPARQL Inference Rules")
     print("=" * 55)
@@ -499,7 +433,6 @@ def run():
 
     print(f"\nAfter local inference: {len(g):,} triples (+{len(g)-before:,})")
 
-    # ── Part B: Wikidata 1-hop expansion ─────────────────────────────────────
     print("\n" + "=" * 55)
     print("PART B — Wikidata 1-Hop Expansion")
     print("=" * 55)
@@ -522,7 +455,6 @@ def run():
 
     print(f"\nWikidata expansion added: +{wikidata_n}")
 
-    # ── Final stats ───────────────────────────────────────────────────────────
     after = len(g)
     print("\n" + "=" * 55)
     print("FINAL STATS")
@@ -550,11 +482,9 @@ def run():
     for p, c in pred_counts.most_common(20):
         print(f"  {p:35s} {c:,}")
 
-    # Save
     g.serialize(destination=OUTPUT_FILE, format="turtle")
     print(f"\nFinal KG saved -> {OUTPUT_FILE}")
 
-    # Update stats file
     lines = [
         f"=== Warring States KG — Final Statistics ===",
         f"",
